@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.adam.zenithx.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "LowFireMixin",
+    "NoTotemOverlayMixin",
+    "PauseScreenMixin",
+    "MixinIntegratedServer",
+    "GameRendererMixin",
+    "GameRendererAccessor",
+    "MinecraftRPCMixin",
+    "TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

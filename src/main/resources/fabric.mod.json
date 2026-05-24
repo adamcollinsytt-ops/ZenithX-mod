@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "zenithx",
+  "version": "1.0.0",
+  "name": "ZenithX",
+  "description": "Play with friends via ZenithX Relay",
+  "icon": "assets/zenithx/textures/zenithx.png",
+  "authors": [
+    "Adam_CollinsYT",
+    "ALKRKY99"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "org.adam.zenithx.HostClientInit",
+      "org.adam.zenithx.handlers.ZenithXClient"
+    ]
+  },
+  "mixins": [
+    "zenithx.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~26.1",
+    "fabric-api": "*"
+  }
+}

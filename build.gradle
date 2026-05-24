@@ -1,0 +1,74 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = '1.0.0'
+group = 'org.adam'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "zenithx" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:26.1.2"
+    implementation "net.fabricmc:fabric-loader:0.18.4"
+    implementation "net.fabricmc.fabric-api:fabric-api:0.148.2+26.1.2"
+
+    implementation files('libs/discord-rpc-1.6.2.jar')
+
+    include implementation('org.json:json:20231013')
+    include implementation('org.java-websocket:Java-WebSocket:1.5.4')
+    include implementation('com.google.code.gson:gson:2.10.1')
+}
+
+processResources {
+    inputs.property "version", project.version
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+    inputs.property "projectName", project.name
+    from("LICENSE") {
+        rename { "${it}_${project.name}" }
+    }
+    from {
+        fileTree('libs').filter { it.name.endsWith('.jar') }.collect { zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'com/sun/jna/**'
+    exclude 'com/sun/jna/platform/**'
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            from components.java
+        }
+    }
+}
