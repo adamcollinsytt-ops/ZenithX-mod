@@ -14,6 +14,7 @@ public class ZenithXClient implements ClientModInitializer {
     public void onInitializeClient() {
         ZenithRPC.init();
         Settings.init();
+        ModDetector.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             Settings.tick();
@@ -27,11 +28,8 @@ public class ZenithXClient implements ClientModInitializer {
                             boolean connected = HostClient.connectToAnyServer();
 
                             if (!connected) {
-
                                 client.execute(() -> {
-
                                     if (!(client.screen instanceof NoConnectionWarningScreen)) {
-
                                         client.setScreen(new NoConnectionWarningScreen(
                                                 () -> {},
                                                 () -> HostClient.tryReconnectNow()
