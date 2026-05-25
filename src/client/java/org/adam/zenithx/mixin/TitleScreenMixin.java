@@ -62,7 +62,5 @@ public abstract class TitleScreenMixin extends Screen {
                 ARGB.white(1.0F),
                 true
         );
-
-        System.out.println("test");
     }
 }
