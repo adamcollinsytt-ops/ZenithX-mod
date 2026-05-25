@@ -20,7 +20,7 @@ public class OnlineIndicator {
     public static final Set<String> ONLINE_MOD_PLAYERS = new HashSet<>();
 
     private static final Identifier TAB_LIST_ICON =
-            Identifier.fromNamespaceAndPath("zenithx", "tab_list_icon");
+            Identifier.fromNamespaceAndPath("zenithx", "textures/tab_list_icon.png");
 
     private static final Map<String, UUID> PLAYER_CACHE = new Object2ObjectOpenHashMap<>();
 
@@ -75,7 +75,14 @@ public class OnlineIndicator {
             PlayerInfo info = sorted.get(idx);
             GameProfile profile = info.getProfile();
             if (profile != null && profile.name() != null) {
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, TAB_LIST_ICON, xo - 10, yo, 8, 8);
+                graphics.blit(
+                        RenderPipelines.GUI_TEXTURED,
+                        TAB_LIST_ICON,
+                        xo - 10, yo,
+                        0f, 0f,
+                        8, 8,
+                        8, 8
+                );
             }
         }
     }
