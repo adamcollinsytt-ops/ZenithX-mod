@@ -12,8 +12,8 @@
     "GameRendererAccessor",
     "MinecraftRPCMixin",
     "TitleScreenMixin",
-    "TabListChatMixin",
-    "ChatIndicatorMixin",
+    "PlayerTabOverlayMixin",
+    "ChatComponentMixin",
     "NametagMixin"
   ],
   "injectors": {
