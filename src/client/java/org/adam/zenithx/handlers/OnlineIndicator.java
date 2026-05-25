@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import com.mojang.authlib.GameProfile;
@@ -19,7 +20,7 @@ public class OnlineIndicator {
     public static final Set<String> ONLINE_MOD_PLAYERS = new HashSet<>();
 
     private static final Identifier TAB_LIST_ICON =
-            Identifier.fromNamespaceAndPath("zenithx", "textures/tab_list_icon.png");
+            Identifier.fromNamespaceAndPath("zenithx", "tab_list_icon");
 
     private static final Map<String, UUID> PLAYER_CACHE = new Object2ObjectOpenHashMap<>();
 
@@ -32,9 +33,7 @@ public class OnlineIndicator {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) return;
 
-        String text = message.getString();
-        String[] parts = text.split("[^\\w]+");
-
+        String[] parts = message.getString().split("[^\\w]+");
         for (String part : parts) {
             PlayerInfo info = mc.getConnection().getPlayerInfo(part);
             if (info != null && info.getProfile() != null && info.getProfile().name() != null) {
@@ -53,6 +52,8 @@ public class OnlineIndicator {
                 .sorted(Comparator.comparingInt(p -> -p.getTabListOrder()))
                 .limit(80)
                 .toList();
+
+        if (sorted.isEmpty()) return;
 
         int cols = 1;
         int rows = sorted.size();
@@ -75,20 +76,9 @@ public class OnlineIndicator {
             GameProfile profile = info.getProfile();
             if (profile != null && profile.name() != null
                     && ONLINE_MOD_PLAYERS.contains(profile.name())) {
-                renderIcon(graphics, xo - 10, yo);
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, TAB_LIST_ICON, xo - 10, yo, 8, 8);
             }
         }
-    }
-
-    private static void renderIcon(GuiGraphicsExtractor graphics, int x, int y) {
-        try {
-            var method = graphics.getClass().getMethod("blitSprite",
-                    net.minecraft.client.renderer.RenderPipelines.class,
-                    Identifier.class, int.class, int.class, int.class, int.class);
-            method.invoke(graphics,
-                    net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-                    TAB_LIST_ICON, x, y, 8, 8);
-        } catch (Exception ignored) {}
     }
 
     public static UUID findUUIDFromDisplayName(Component displayName) {
@@ -105,8 +95,7 @@ public class OnlineIndicator {
                 }
             }
 
-            String text = displayName.getString();
-            String[] parts = text.split("[^\\w]+");
+            String[] parts = displayName.getString().split("[^\\w]+");
             for (String part : parts) {
                 if (PLAYER_CACHE.containsKey(part)) {
                     return PLAYER_CACHE.get(part);

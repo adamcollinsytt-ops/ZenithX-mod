@@ -13,7 +13,6 @@
     "MinecraftRPCMixin",
     "TitleScreenMixin",
     "PlayerTabOverlayMixin",
-    "ChatComponentMixin",
     "NametagMixin"
   ],
   "injectors": {

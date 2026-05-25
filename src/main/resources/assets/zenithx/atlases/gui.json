@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "type": "single",
+      "resource": "zenithx:textures/tab_list_icon.png",
+      "sprite": "zenithx:tab_list_icon"
+    }
+  ]
+}

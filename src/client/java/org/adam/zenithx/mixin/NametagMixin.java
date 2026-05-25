@@ -20,8 +20,7 @@ public class NametagMixin {
     )
     private void onSubmitNameDisplay(EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo ci) {
         if (state.nameTag == null) return;
-        String nameText = state.nameTag.getString();
-        String[] parts = nameText.split("[^\\w]+");
+        String[] parts = state.nameTag.getString().split("[^\\w]+");
         for (String part : parts) {
             if (OnlineIndicator.ONLINE_MOD_PLAYERS.contains(part)) {
                 OnlineIndicator.currentlyDrawingPlayerEntityName.set(true);
