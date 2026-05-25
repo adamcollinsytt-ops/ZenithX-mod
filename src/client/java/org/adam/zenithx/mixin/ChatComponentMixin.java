@@ -4,7 +4,6 @@ import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MessageSignature;
 import net.minecraft.client.multiplayer.chat.GuiMessageTag;
-import net.minecraft.client.multiplayer.chat.GuiMessageSource;
 import org.adam.zenithx.handlers.OnlineIndicator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
