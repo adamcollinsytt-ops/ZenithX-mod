@@ -56,8 +56,8 @@ public abstract class TitleScreenMixin extends Screen {
     private void onExtractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         graphics.text(
                 this.font,
-                "By Adam_CollinsYT, ALKRKY99",
-                2,
+                "By Adam_CollinsYT, ALKRKY99, xek",
+                2,  
                 this.height - 20,
                 ARGB.white(1.0F),
                 true
