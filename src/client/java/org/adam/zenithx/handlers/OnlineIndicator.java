@@ -18,14 +18,33 @@ public class OnlineIndicator {
             Identifier.fromNamespaceAndPath("zenithx", "textures/tab_list_icon.png");
 
     private static final Map<String, UUID> PLAYER_CACHE = new Object2ObjectOpenHashMap<>();
+    private static final Set<String> ONLINE_MOD_PLAYERS = new HashSet<>();
 
     public static boolean currentlyDrawingPlayerEntityName() {
         return currentlyDrawingPlayerEntityName.get();
     }
 
+    public static void trackChatMessage(Component message) {
+        if (message == null) return;
+        UUID uuid = findUUIDFromDisplayName(message);
+        if (uuid != null) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.getConnection() != null) {
+                PlayerInfo info = mc.getConnection().getPlayerInfo(uuid);
+                if (info != null && info.getProfile() != null && info.getProfile().name() != null) {
+                    ONLINE_MOD_PLAYERS.add(info.getProfile().name());
+                }
+            }
+        }
+    }
+
+    public static void onChatRender(Object graphics) {
+    }
+
     public static void drawTabIndicator(Object graphics, PlayerInfo playerInfo, int x, int y) {
         if (graphics == null || playerInfo == null) return;
-        if (playerInfo.getProfile() != null) {
+        GameProfile profile = playerInfo.getProfile();
+        if (profile != null && profile.name() != null && ONLINE_MOD_PLAYERS.contains(profile.name())) {
             renderIcon(graphics, x - 12, y);
         }
     }

@@ -11,7 +11,10 @@
     "GameRendererMixin",
     "GameRendererAccessor",
     "MinecraftRPCMixin",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "TabListChatMixin",
+    "ChatIndicatorMixin",
+    "NametagMixin"
   ],
   "injectors": {
     "defaultRequire": 1
