@@ -22,10 +22,8 @@ public class NametagMixin {
         if (state.nameTag == null) return;
         String[] parts = state.nameTag.getString().split("[^\\w]+");
         for (String part : parts) {
-            if (OnlineIndicator.ONLINE_MOD_PLAYERS.contains(part)) {
-                OnlineIndicator.currentlyDrawingPlayerEntityName.set(true);
-                return;
-            }
+            OnlineIndicator.currentlyDrawingPlayerEntityName.set(true);
+            return;
         }
         OnlineIndicator.currentlyDrawingPlayerEntityName.set(false);
     }

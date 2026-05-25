@@ -74,8 +74,7 @@ public class OnlineIndicator {
 
             PlayerInfo info = sorted.get(idx);
             GameProfile profile = info.getProfile();
-            if (profile != null && profile.name() != null
-                    && ONLINE_MOD_PLAYERS.contains(profile.name())) {
+            if (profile != null && profile.name() != null) {
                 graphics.blitSprite(RenderPipelines.GUI_TEXTURED, TAB_LIST_ICON, xo - 10, yo, 8, 8);
             }
         }
