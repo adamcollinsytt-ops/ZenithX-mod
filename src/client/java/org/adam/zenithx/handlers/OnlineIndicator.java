@@ -1,8 +1,7 @@
 package org.adam.zenithx.handlers;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import com.mojang.authlib.GameProfile;
@@ -15,8 +14,8 @@ public class OnlineIndicator {
     public static final ThreadLocal<Boolean> currentlyDrawingPlayerEntityName =
             ThreadLocal.withInitial(() -> false);
 
-    private static final ResourceLocation TAB_LIST_ICON =
-            ResourceLocation.fromNamespaceAndPath("zenithx", "textures/tab_list_icon.png");
+    private static final Identifier TAB_LIST_ICON =
+            Identifier.fromNamespaceAndPath("zenithx", "textures/tab_list_icon.png");
 
     private static final Map<String, UUID> PLAYER_CACHE = new Object2ObjectOpenHashMap<>();
 
@@ -24,20 +23,35 @@ public class OnlineIndicator {
         return currentlyDrawingPlayerEntityName.get();
     }
 
-    public static void drawTabIndicator(GuiGraphics graphics, PlayerInfo playerInfo, int x, int y) {
+    public static void drawTabIndicator(Object graphics, PlayerInfo playerInfo, int x, int y) {
         if (graphics == null || playerInfo == null) return;
         if (playerInfo.getProfile() != null) {
             renderIcon(graphics, x - 12, y);
         }
     }
 
-    public static void drawNametagIndicator(GuiGraphics graphics, int x, int y) {
+    public static void drawNametagIndicator(Object graphics, int x, int y) {
         if (graphics == null) return;
         renderIcon(graphics, x - 12, y - 10);
     }
 
-    private static void renderIcon(GuiGraphics graphics, int x, int y) {
-        graphics.blit(TAB_LIST_ICON, x, y, 0, 0f, 0f, 8, 8, 8, 8);
+    private static void renderIcon(Object graphics, int x, int y) {
+        try {
+            for (var m : graphics.getClass().getMethods()) {
+                if ((m.getName().equals("blit")
+                        || m.getName().equals("drawTexture")
+                        || m.getName().contains("method_25290"))
+                        && m.getParameterCount() >= 9) {
+
+                    if (m.getParameterCount() == 9) {
+                        m.invoke(graphics, TAB_LIST_ICON, x, y, 0f, 0f, 8, 8, 8, 8);
+                    } else {
+                        m.invoke(graphics, TAB_LIST_ICON, x, y, 0, 0f, 0f, 8, 8, 8, 8);
+                    }
+                    break;
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     public static int getTextBackgroundOpacity() {
@@ -78,8 +92,8 @@ public class OnlineIndicator {
 
             for (PlayerInfo info : players) {
                 GameProfile profile = info.getProfile();
-                if (profile != null && profile.getName() != null && profile.getId() != null) {
-                    PLAYER_CACHE.put(profile.getName(), profile.getId());
+                if (profile != null && profile.name() != null && profile.id() != null) {
+                    PLAYER_CACHE.put(profile.name(), profile.id());
                 }
             }
 
