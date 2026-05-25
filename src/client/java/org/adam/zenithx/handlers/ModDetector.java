@@ -2,6 +2,8 @@ package org.adam.zenithx.handlers;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -13,12 +15,30 @@ public class ModDetector {
             Identifier.fromNamespaceAndPath("zenithx", "handshake");
 
     public static void register() {
-        ClientPlayNetworking.registerGlobalReceiver(HandshakePayload.TYPE, (payload, context) -> {
-            String playerName = context.player().getGameProfile().name();
-            OnlineIndicator.ONLINE_MOD_PLAYERS.add(playerName);
-        });
+
+        PayloadTypeRegistry.serverboundPlay().register(
+                HandshakePayload.TYPE,
+                HandshakePayload.STREAM_CODEC
+        );
+
+        PayloadTypeRegistry.clientboundPlay().register(
+                HandshakePayload.TYPE,
+                HandshakePayload.STREAM_CODEC
+        );
+
+        ClientPlayNetworking.registerGlobalReceiver(
+                HandshakePayload.TYPE,
+                (payload, context) -> {
+
+                    String playerName =
+                            context.player().getGameProfile().name();
+
+                    OnlineIndicator.ONLINE_MOD_PLAYERS.add(playerName);
+                }
+        );
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+
             if (ClientPlayNetworking.canSend(HandshakePayload.TYPE)) {
                 ClientPlayNetworking.send(new HandshakePayload());
             }
@@ -30,13 +50,15 @@ public class ModDetector {
     }
 
     public record HandshakePayload() implements CustomPacketPayload {
-        public static final CustomPacketPayload.Type<HandshakePayload> TYPE =
-                new CustomPacketPayload.Type<>(CHANNEL_ID);
+
+        public static final Type<HandshakePayload> TYPE =
+                new Type<>(CHANNEL_ID);
+
         public static final StreamCodec<RegistryFriendlyByteBuf, HandshakePayload> STREAM_CODEC =
                 StreamCodec.unit(new HandshakePayload());
 
         @Override
-        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        public Type<? extends CustomPacketPayload> type() {
             return TYPE;
         }
     }
