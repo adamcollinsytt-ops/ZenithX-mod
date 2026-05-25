@@ -5,10 +5,6 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import org.adam.zenithx.handlers.OnlineIndicator;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,20 +20,14 @@ public class NametagMixin {
     )
     private void onSubmitNameDisplay(EntityRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState camera, CallbackInfo ci) {
         if (state.nameTag == null) return;
-
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.getConnection() == null) return;
-
         String nameText = state.nameTag.getString();
         String[] parts = nameText.split("[^\\w]+");
-
         for (String part : parts) {
             if (OnlineIndicator.ONLINE_MOD_PLAYERS.contains(part)) {
                 OnlineIndicator.currentlyDrawingPlayerEntityName.set(true);
                 return;
             }
         }
-
         OnlineIndicator.currentlyDrawingPlayerEntityName.set(false);
     }
 

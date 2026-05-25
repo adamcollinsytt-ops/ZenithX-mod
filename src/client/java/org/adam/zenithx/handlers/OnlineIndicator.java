@@ -23,35 +23,33 @@ public class OnlineIndicator {
 
     private static final Map<String, UUID> PLAYER_CACHE = new Object2ObjectOpenHashMap<>();
 
+    public static boolean currentlyDrawingPlayerEntityName() {
+        return currentlyDrawingPlayerEntityName.get();
+    }
+
     public static void trackChatMessage(Component message) {
         if (message == null) return;
-        UUID uuid = findUUIDFromDisplayName(message);
-        if (uuid == null) return;
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) return;
 
-        PlayerInfo info = mc.getConnection().getPlayerInfo(uuid);
-        if (info != null && info.getProfile() != null && info.getProfile().name() != null) {
-            ONLINE_MOD_PLAYERS.add(info.getProfile().name());
+        String text = message.getString();
+        String[] parts = text.split("[^\\w]+");
+
+        for (String part : parts) {
+            PlayerInfo info = mc.getConnection().getPlayerInfo(part);
+            if (info != null && info.getProfile() != null && info.getProfile().name() != null) {
+                ONLINE_MOD_PLAYERS.add(info.getProfile().name());
+                return;
+            }
         }
     }
 
     public static void drawTabListOverlay(GuiGraphicsExtractor graphics, PlayerTabOverlay overlay, int screenWidth) {
         if (graphics == null) return;
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) return;
 
-        Collection<PlayerInfo> players;
-        try {
-            players = mc.getConnection().getOnlinePlayers();
-        } catch (Exception e) {
-            return;
-        }
-
-        int i = 0;
-        List<PlayerInfo> sorted = players.stream()
+        List<PlayerInfo> sorted = mc.getConnection().getListedOnlinePlayers().stream()
                 .sorted(Comparator.comparingInt(p -> -p.getTabListOrder()))
                 .limit(80)
                 .toList();
@@ -82,76 +80,25 @@ public class OnlineIndicator {
         }
     }
 
-    public static void drawTabIndicator(Object graphics, PlayerInfo playerInfo, int x, int y) {
-        if (graphics == null || playerInfo == null) return;
-        GameProfile profile = playerInfo.getProfile();
-        if (profile != null && profile.name() != null
-                && ONLINE_MOD_PLAYERS.contains(profile.name())) {
-            renderIconRaw(graphics, x - 12, y);
-        }
-    }
-
-    public static void drawNametagIndicator(Object graphics, int x, int y) {
-        if (graphics == null) return;
-        renderIconRaw(graphics, x - 12, y - 10);
-    }
-
     private static void renderIcon(GuiGraphicsExtractor graphics, int x, int y) {
         try {
-            var m = graphics.getClass().getMethod("blitSprite",
+            var method = graphics.getClass().getMethod("blitSprite",
                     net.minecraft.client.renderer.RenderPipelines.class,
                     Identifier.class, int.class, int.class, int.class, int.class);
-            m.invoke(graphics,
+            method.invoke(graphics,
                     net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
                     TAB_LIST_ICON, x, y, 8, 8);
-        } catch (Exception ignored) {
-            renderIconRaw(graphics, x, y);
-        }
-    }
-
-    private static void renderIconRaw(Object graphics, int x, int y) {
-        try {
-            for (var m : graphics.getClass().getMethods()) {
-                if ((m.getName().equals("blit")
-                        || m.getName().equals("drawTexture"))
-                        && m.getParameterCount() >= 9) {
-                    if (m.getParameterCount() == 9) {
-                        m.invoke(graphics, TAB_LIST_ICON, x, y, 0f, 0f, 8, 8, 8, 8);
-                    } else {
-                        m.invoke(graphics, TAB_LIST_ICON, x, y, 0, 0f, 0f, 8, 8, 8, 8);
-                    }
-                    break;
-                }
-            }
         } catch (Exception ignored) {}
     }
 
     public static UUID findUUIDFromDisplayName(Component displayName) {
         if (displayName == null) return null;
-
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) return null;
 
         try {
-            Collection<PlayerInfo> players;
-            try {
-                players = mc.getConnection().getOnlinePlayers();
-            } catch (NoSuchMethodError e) {
-                var method = mc.getConnection().getClass().getMethod("getPlayerInfoMap");
-                Object result = method.invoke(mc.getConnection());
-                if (result instanceof Map<?, ?> map) {
-                    players = map.values().stream()
-                            .filter(v -> v instanceof PlayerInfo)
-                            .map(v -> (PlayerInfo) v)
-                            .toList();
-                } else {
-                    return null;
-                }
-            }
-
             PLAYER_CACHE.clear();
-
-            for (PlayerInfo info : players) {
+            for (PlayerInfo info : mc.getConnection().getOnlinePlayers()) {
                 GameProfile profile = info.getProfile();
                 if (profile != null && profile.name() != null && profile.id() != null) {
                     PLAYER_CACHE.put(profile.name(), profile.id());
@@ -160,13 +107,11 @@ public class OnlineIndicator {
 
             String text = displayName.getString();
             String[] parts = text.split("[^\\w]+");
-
             for (String part : parts) {
                 if (PLAYER_CACHE.containsKey(part)) {
                     return PLAYER_CACHE.get(part);
                 }
             }
-
         } catch (Exception ignored) {}
 
         return null;
