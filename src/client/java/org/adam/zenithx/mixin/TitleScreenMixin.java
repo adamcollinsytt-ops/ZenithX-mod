@@ -57,10 +57,12 @@ public abstract class TitleScreenMixin extends Screen {
         graphics.text(
                 this.font,
                 "By Adam_CollinsYT, ALKRKY99, xek",
-                2,  
+                2,
                 this.height - 20,
                 ARGB.white(1.0F),
                 true
         );
+
+        System.out.println("test");
     }
 }
