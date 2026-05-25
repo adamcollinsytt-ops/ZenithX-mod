@@ -22,7 +22,6 @@ public class OnlineIndicator {
             Identifier.fromNamespaceAndPath("zenithx", "textures/tab_list_icon.png");
 
     private static final Map<String, UUID> PLAYER_CACHE = new Object2ObjectOpenHashMap<>();
-    private static final Set<String> ONLINE_MOD_PLAYERS = new HashSet<>();
 
     public static void trackChatMessage(Component message) {
         if (message == null) return;

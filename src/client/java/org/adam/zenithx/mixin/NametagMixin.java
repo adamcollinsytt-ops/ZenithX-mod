@@ -32,9 +32,7 @@ public class NametagMixin {
         String[] parts = nameText.split("[^\\w]+");
 
         for (String part : parts) {
-            PlayerInfo info = mc.getConnection().getPlayerInfoByName(part);
-            if (info != null && info.getProfile() != null
-                    && OnlineIndicator.ONLINE_MOD_PLAYERS.contains(info.getProfile().name())) {
+            if (OnlineIndicator.ONLINE_MOD_PLAYERS.contains(part)) {
                 OnlineIndicator.currentlyDrawingPlayerEntityName.set(true);
                 return;
             }
