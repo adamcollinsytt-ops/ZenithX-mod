@@ -27,12 +27,12 @@ public class PauseScreenMixin extends net.minecraft.client.gui.screens.Screen {
                 rightX, startY, 100, 20,
                 Component.literal("Invite"),
                 btn -> this.minecraft.setScreen(new FriendsScreen(null))
-        ).setIcon(Identifier.fromNamespaceAndPath("zenithx", "icons/friends"), 1));
+        ).setIcon(Identifier.fromNamespaceAndPath("zenithx", "icons/friendplus"), 1));
 
         this.addRenderableWidget(new MenuButton(
                 rightX, startY + 24, 100, 20,
                 Component.literal("Social"),
                 btn -> this.minecraft.setScreen(new HostScreen())
-        ));
+        ).setIcon(Identifier.fromNamespaceAndPath("zenithx", "icons/social"), 1));
     }
 }
