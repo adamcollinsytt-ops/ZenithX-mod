@@ -9,6 +9,7 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import org.adam.zenithx.ui.notification.Notification;
 import org.adam.zenithx.ui.notification.NotificationManager;
+import org.adam.zenithx.ui.FriendsScreen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,12 @@ public class HostMain implements ClientModInitializer {
 
                     System.out.println("[ZenithX] Friends loaded: " + arr.size());
                 }
+
+                Minecraft.getInstance().execute(() -> {
+                    if (Minecraft.getInstance().screen instanceof FriendsScreen fs) {
+                        fs.publicrefresh2026byadam();
+                    }
+                });
             }
 
             case "ONLINE_LIST" -> {

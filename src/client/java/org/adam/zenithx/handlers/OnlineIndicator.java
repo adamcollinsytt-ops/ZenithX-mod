@@ -1,7 +1,8 @@
 package org.adam.zenithx.handlers;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -11,6 +12,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.*;
 
 public class OnlineIndicator {
+
+    public static final ThreadLocal<Boolean> currentlyDrawingPlayerEntityName =
+            ThreadLocal.withInitial(() -> false);
 
     public static final Set<String> ONLINE_MOD_PLAYERS = new HashSet<>();
 
@@ -31,7 +35,7 @@ public class OnlineIndicator {
         for (String part : parts) {
             PlayerInfo info = mc.getConnection().getPlayerInfo(part);
             if (info != null && info.getProfile() != null) {
-                String name = info.getProfile().name();
+                String name = info.getProfile().name(); // ✅ record method
                 if (name != null) {
                     ONLINE_MOD_PLAYERS.add(name);
                     return;
@@ -40,7 +44,7 @@ public class OnlineIndicator {
         }
     }
 
-    public static void drawTabListOverlay(GuiGraphics graphics, int screenWidth) {
+    public static void drawTabListOverlay(GuiGraphicsExtractor graphics, PlayerTabOverlay tabOverlay, int screenWidth) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) return;
 
@@ -61,11 +65,10 @@ public class OnlineIndicator {
         }
 
         int slotWidth = Math.min(cols * 120, screenWidth - 50) / cols;
-
         int xStart = screenWidth / 2 - (slotWidth * cols) / 2;
         int yStart = 10;
 
-        float guiScale = mc.getWindow().getGuiScale();
+        float guiScale = (float) mc.getWindow().getGuiScale();
 
         float scale;
         float offset;
@@ -81,7 +84,6 @@ public class OnlineIndicator {
         int iconSize = Math.round(5 * scale);
 
         for (int i = 0; i < players.size(); i++) {
-
             int col = i / rows;
             int row = i % rows;
 
@@ -91,14 +93,13 @@ public class OnlineIndicator {
             PlayerInfo info = players.get(i);
             GameProfile profile = info.getProfile();
 
-            if (profile == null || profile.name() == null) continue;
-
+            if (profile == null || profile.name() == null) continue; // ✅ .name()
             if (!ONLINE_MOD_PLAYERS.contains(profile.name())) continue;
 
             graphics.blit(
                     TAB_LIST_ICON,
-                    x - 10 + offset,
-                    y + offset,
+                    x - 10 + (int) offset,
+                    y + (int) offset,
                     0,
                     0,
                     iconSize,
@@ -119,7 +120,7 @@ public class OnlineIndicator {
 
         for (PlayerInfo info : mc.getConnection().getOnlinePlayers()) {
             GameProfile profile = info.getProfile();
-            if (profile != null && profile.name() != null && profile.id() != null) {
+            if (profile != null && profile.name() != null && profile.id() != null) { // ✅
                 PLAYER_CACHE.put(profile.name(), profile.id());
             }
         }

@@ -286,6 +286,10 @@ public class FriendsScreen extends HostBaseScreen {
         invites.forEach(SkinCache::request);
     }
 
+    public void publicrefresh2026byadam() {
+        refresh();
+    }
+
     // -----------------------------------------------------------------------
     // Render
     // -----------------------------------------------------------------------
@@ -394,8 +398,13 @@ public class FriendsScreen extends HostBaseScreen {
             drawAvatar(gfx, avX, avY, row.name);
 
             // Name
-            gfx.text(font, Component.literal(row.name),
-                    px + 26, y + (RH - 7) / 2, C_TEXT);
+            String extra = FriendManager.getInstance().getLastSeenText(row.name);
+
+            gfx.text(font,
+                    Component.literal(row.name + " " + extra),
+                    px + 26, y + (RH - 7) / 2,
+                    C_TEXT
+            );
 
             if (row.type == Row.T.FRIEND) {
                 boolean online = FriendManager.getInstance().isOnline(row.name);

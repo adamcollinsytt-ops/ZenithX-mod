@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import org.adam.zenithx.ui.NoConnectionWarningScreen;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.adam.zenithx.mixin.TitleScreenMixin;
 
 public class HostClient extends WebSocketClient {
 
@@ -30,6 +31,8 @@ public class HostClient extends WebSocketClient {
     private static boolean retrying = false;
     private static volatile boolean wasConnected = false;
 
+    public static String SERVER_VERSION = "1.0.0";
+    public static UpdateCallback updateCallback = null;
     public static volatile boolean UI_BLOCKED = false;
     public static volatile boolean FORCE_TITLE = false;
     public static volatile boolean USER_DISMISSED = false;
@@ -47,6 +50,10 @@ public class HostClient extends WebSocketClient {
             }
         }
         return instance;
+    }
+
+    public static String getServerVersion() {
+        return SERVER_VERSION;
     }
 
     private HostClient(URI uri) {
@@ -84,7 +91,29 @@ public class HostClient extends WebSocketClient {
     public void onMessage(String raw) {
         try {
             JsonObject json = GSON.fromJson(raw, JsonObject.class);
+
+            if (json.has("type")) {
+                String type = json.get("type").getAsString();
+
+                if (type.equals("VERSION")) {
+                    SERVER_VERSION = json.get("version").getAsString();
+                    if (updateCallback != null) {
+                        Minecraft.getInstance().execute(() -> updateCallback.onUpdateAvailable(SERVER_VERSION));
+                    }
+                }
+
+                if (type.equals("UPDATE_LINK")) {
+                    String url = json.get("url").getAsString();
+                    Minecraft.getInstance().execute(() -> {
+                        try {
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+                        } catch (Exception ignored) {}
+                    });
+                }
+            }
+
             if (handler != null) handler.accept(json);
+
         } catch (Exception ignored) {}
     }
 

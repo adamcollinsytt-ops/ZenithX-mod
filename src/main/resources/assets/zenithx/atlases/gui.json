@@ -4,6 +4,11 @@
       "type": "single",
       "resource": "zenithx:textures/tab_list_icon.png",
       "sprite": "zenithx:tab_list_icon"
+    },
+    {
+      "type": "directory",
+      "source": "zenithx:textures/icons",
+      "prefix": "zenithx:icons/"
     }
   ]
 }
