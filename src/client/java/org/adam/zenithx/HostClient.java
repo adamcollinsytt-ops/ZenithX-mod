@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.world.level.storage.LevelSummary;
 
 import org.adam.zenithx.ui.NoConnectionWarningScreen;
 import org.java_websocket.client.WebSocketClient;
@@ -30,12 +31,17 @@ public class HostClient extends WebSocketClient {
     static String lastLoginUsername;
     private static boolean retrying = false;
     private static volatile boolean wasConnected = false;
+    private final Minecraft minecraft = Minecraft.getInstance();
 
     public static String SERVER_VERSION = "1.0.0";
     public static UpdateCallback updateCallback = null;
     public static volatile boolean UI_BLOCKED = false;
     public static volatile boolean FORCE_TITLE = false;
     public static volatile boolean USER_DISMISSED = false;
+
+    private HostClient(URI uri) {
+        super(uri);
+    }
 
     Consumer<JsonObject> handler;
     Runnable onConnect;
@@ -52,12 +58,31 @@ public class HostClient extends WebSocketClient {
         return instance;
     }
 
-    public static String getServerVersion() {
-        return SERVER_VERSION;
+    public void hostWorld(LevelSummary world, String friendName) {
+        if (world == null) return;
+
+        try {
+            minecraft.execute(() -> {
+                minecraft.setScreen(
+                        new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(null)
+                );
+            });
+
+            if (friendName != null && !friendName.isEmpty()) {
+                sendHostingInvite(friendName);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private HostClient(URI uri) {
-        super(uri);
+    private void sendHostingInvite(String friendName) {
+        System.out.println("The hosting invitation was sent to: " + friendName);
+    }
+
+    public static String getServerVersion() {
+        return SERVER_VERSION;
     }
 
     public void setMessageHandler(Consumer<JsonObject> h) { this.handler = h; }

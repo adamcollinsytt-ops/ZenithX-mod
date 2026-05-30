@@ -10,6 +10,8 @@ import net.minecraft.util.ARGB;
 import org.adam.zenithx.HostClient;
 import org.adam.zenithx.ui.FriendsScreen;
 import org.adam.zenithx.ui.HostScreen;
+import org.adam.zenithx.ui.HostWorldScreen;
+import org.adam.zenithx.ui.WorldSettingsScreen;
 import org.adam.zenithx.ui.components.MenuButton;
 import org.adam.zenithx.ui.notification.Notification;
 import org.adam.zenithx.ui.notification.NotificationManager;
@@ -71,7 +73,7 @@ public abstract class TitleScreenMixin extends Screen {
                 rightX, startY + offset,
                 100, 20,
                 Component.literal("Host World"),
-                btn -> this.minecraft.setScreen(new HostScreen())
+                btn -> this.minecraft.setScreen(new HostWorldScreen())
         ).setIcon(Identifier.fromNamespaceAndPath("zenithx", "icons/world_8x8"), 0));
         offset += 24;
 
@@ -80,15 +82,8 @@ public abstract class TitleScreenMixin extends Screen {
                 100, 20,
                 Component.literal("Social"),
                 btn -> this.minecraft.setScreen(new FriendsScreen(null))
-        ));
+        ).setIcon(Identifier.fromNamespaceAndPath("zenithx", "icons/social"), 0));
         offset += 24;
-
-        this.addRenderableWidget(new MenuButton(
-                rightX, startY + offset,
-                100, 20,
-                Component.literal("ZenithX"),
-                btn -> this.minecraft.setScreen(new HostScreen())
-        ));
 
         Component creditsText = Component.literal("By Adam_CollinsYT, ALKRKY99, xek").withStyle(style -> style.withColor(ARGB.white(1.0F)));
         int textWidth = this.font.width(creditsText);

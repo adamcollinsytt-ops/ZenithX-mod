@@ -2,9 +2,11 @@ package org.adam.zenithx.mixin;
 
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.adam.zenithx.ui.HostBaseScreen;
 import org.adam.zenithx.ui.FriendsScreen;
 import org.adam.zenithx.ui.HostScreen;
+import org.adam.zenithx.ui.WorldSettingsScreen;
 import org.adam.zenithx.ui.components.MenuButton;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,7 +28,7 @@ public class PauseScreenMixin extends net.minecraft.client.gui.screens.Screen {
         this.addRenderableWidget(new MenuButton(
                 rightX, startY, 100, 20,
                 Component.literal("Invite"),
-                btn -> this.minecraft.setScreen(new FriendsScreen(null))
+                btn -> this.minecraft.setScreen(new WorldSettingsScreen(null, null))
         ).setIcon(Identifier.fromNamespaceAndPath("zenithx", "icons/friendplus"), 1));
 
         this.addRenderableWidget(new MenuButton(

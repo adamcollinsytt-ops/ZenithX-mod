@@ -192,9 +192,14 @@ public class HostMain implements ClientModInitializer {
                                 Thread.sleep(500);
 
                                 boolean published = srv.publishServer(
-                                        net.minecraft.world.level.GameType.SURVIVAL,
-                                        false,
+                                        HostSessionConfig.getGameMode(),
+                                        HostSessionConfig.hasCheats(),
                                         25565
+                                );
+
+                                srv.setDifficulty(
+                                        HostSessionConfig.getDifficulty(),
+                                        true
                                 );
 
                                 System.out.println("[ZenithX] publish result: " + published);

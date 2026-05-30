@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZenithX — Play With Friends</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+/* ── VARIABLES — exact mod palette ── */
+:root{
+  --bg:       #1A1A1A;
+  --bg2:      #212121;
+  --bg3:      #1E1E1E;
+  --bg4:      #252525;
+  --border:   #3A3A3A;
+  --sect:     #484848;
+  --text:     #D4D0C8;
+  --dim:      #888888;
+  --white:    #FFFFFF;
+  --blue:     #274673;
+  --blue2:    #3073D4;
+  --blue-hl:  #3A6AA8;   /* brighten(#274673, 0.4) */
+  --blue-sh:  rgba(0,4,0,0.5);
+  --blue-out: #000400;
+  --green:    #226132;
+  --green2:   #2D7941;
+  --row-hov:  #2A2A2A;
+  --rowline:  #222222;
+  --srchbg:   #111111;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Share Tech Mono',monospace;
+  font-size:14px;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* ── MOD-STYLE BUTTON ── */
+.mc-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+  padding:9px 22px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  cursor:pointer;
+  text-decoration:none;
+  border:none;
+  outline:none;
+  /* exact MenuButton background */
+  background:var(--blue);
+  color:var(--white);
+  /* highlight top-left */
+  box-shadow:
+    inset 1px 0   0 0 var(--blue-hl),
+    inset 0  1px  0 0 var(--blue-hl),
+    inset -1px 0  0 0 var(--blue-sh),
+    inset 0 -1px  0 0 var(--blue-sh),
+    /* outline */
+    -1px -1px 0 0 var(--blue-out),
+     1px -1px 0 0 var(--blue-out),
+    -1px  1px 0 0 var(--blue-out),
+     1px  1px 0 0 var(--blue-out);
+  transition:background .15s, transform .1s;
+}
+.mc-btn:hover{background:var(--blue2);transform:translateY(-1px)}
+.mc-btn:active{transform:translateY(0)}
+
+.mc-btn.gray{
+  background:var(--bg2);
+  color:var(--text);
+  --blue-hl:#484848;
+  --blue-sh:rgba(0,0,0,0.5);
+  --blue-out:#000400;
+}
+.mc-btn.gray:hover{background:var(--sect)}
+
+.mc-btn.green{
+  background:var(--green);
+  --blue-hl:#2E7A40;
+  --blue-sh:rgba(0,4,0,0.5);
+  --blue-out:#000400;
+}
+.mc-btn.green:hover{background:var(--green2)}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:52px;
+  background:rgba(26,26,26,0.97);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;
+  backdrop-filter:blur(8px);
+}
+.nav-logo{
+  font-family:'Rajdhani',sans-serif;
+  font-size:24px;font-weight:700;
+  color:var(--white);text-decoration:none;
+  letter-spacing:2px;
+}
+.nav-logo span{color:var(--blue2)}
+.nav-links{display:flex;gap:4px;list-style:none}
+.nav-links a{
+  color:var(--dim);text-decoration:none;
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;
+  padding:6px 12px;
+  border:1px solid transparent;
+  transition:color .15s,border-color .15s;
+}
+.nav-links a:hover{color:var(--text);border-color:var(--border)}
+.nav-links a.dl{
+  color:var(--white);
+  background:var(--blue);
+  border-color:var(--blue-out);
+  box-shadow:inset 1px 0 0 var(--blue-hl),inset 0 1px 0 var(--blue-hl);
+}
+.nav-links a.dl:hover{background:var(--blue2)}
+
+/* ── HERO ── */
+#hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  overflow:hidden;
+  padding-top:52px;
+}
+#bg-video{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  opacity:0.22;
+  pointer-events:none;z-index:0;
+}
+.hero-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(to bottom, rgba(26,26,26,.6) 0%, transparent 35%, transparent 60%, rgba(26,26,26,1) 100%),
+    linear-gradient(to right, rgba(26,26,26,.4), transparent 40%, transparent 60%, rgba(26,26,26,.4));
+}
+/* scanline effect */
+.hero-overlay::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.07) 2px,
+    rgba(0,0,0,.07) 4px
+  );
+  pointer-events:none;
+}
+.hero-content{
+  position:relative;z-index:2;
+  text-align:center;
+  padding:0 24px;
+  max-width:700px;
+}
+.hero-tag{
+  display:inline-block;
+  background:var(--srchbg);
+  border:1px solid var(--border);
+  color:var(--dim);
+  font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  padding:4px 14px;margin-bottom:24px;
+  animation:fadeUp .7s ease both;
+}
+h1{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(58px,10vw,108px);
+  font-weight:700;line-height:.9;
+  letter-spacing:-2px;
+  color:var(--white);
+  animation:fadeUp .7s .08s ease both;
+}
+h1 em{
+  color:var(--blue2);font-style:normal;
+  text-shadow:0 0 40px rgba(48,115,212,.4);
+}
+.hero-sub{
+  margin:22px auto 0;max-width:420px;
+  color:var(--dim);font-size:14px;
+  animation:fadeUp .7s .16s ease both;
+}
+.hero-btns{
+  margin-top:40px;
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp .7s .24s ease both;
+}
+.scroll-hint{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  z-index:2;color:var(--dim);font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  animation:pulse 2.5s infinite;
+}
+.scroll-hint svg{width:16px;opacity:.5}
+
+/* ── PANEL (mod-style container) ── */
+.panel{
+  background:var(--bg);
+  border:1px solid var(--border);
+  position:relative;
+}
+.panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  box-shadow:inset 1px 0 0 #484848,inset 0 1px 0 #484848,
+             inset -1px 0 0 rgba(0,0,0,.5),inset 0 -1px 0 rgba(0,0,0,.5);
+}
+
+/* ── TOPBAR (like FriendsScreen topbar) ── */
+.topbar{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:13px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text);
+}
+
+/* ── FEATURES ── */
+#features{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.section{max-width:1060px;margin:0 auto;padding:80px 24px}
+.section-label{
+  font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:4px;text-transform:uppercase;color:var(--blue2);
+  margin-bottom:10px;
+}
+.section-title{
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(28px,4vw,46px);font-weight:700;
+  color:var(--white);line-height:1.05;margin-bottom:48px;
+}
+
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);
+}
+.feat{
+  background:var(--bg3);
+  padding:28px 26px;
+  position:relative;
+  transition:background .2s;
+}
+.feat:hover{background:var(--row-hov)}
+.feat::after{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:2px;background:var(--blue2);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .25s;
+}
+.feat:hover::after{transform:scaleX(1)}
+.feat-icon{
+  width:32px;height:32px;
+  background:var(--bg4);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;margin-bottom:16px;
+  box-shadow:inset 1px 0 0 var(--sect),inset 0 1px 0 var(--sect);
+}
+.feat-title{
+  font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;
+  color:var(--white);margin-bottom:8px;letter-spacing:.5px;
+}
+.feat-desc{color:var(--dim);font-size:13px;line-height:1.65}
+
+/* ── SAFETY ── */
+#safety{background:var(--bg)}
+.safety-inner{
+  max-width:1060px;margin:0 auto;padding:80px 24px;
+  display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;
+}
+@media(max-width:680px){.safety-inner{grid-template-columns:1fr}}
+
+.safety-list{display:flex;flex-direction:column;gap:2px}
+.safety-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-bottom:none;
+  position:relative;
+}
+.safety-row:last-child{border-bottom:1px solid var(--border)}
+.safety-row::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:2px;background:transparent;transition:background .2s;
+}
+.safety-row:hover::before{background:var(--blue2)}
+.s-icon{
+  width:28px;height:28px;flex-shrink:0;
+  background:var(--bg4);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;
+}
+.s-text strong{display:block;color:var(--white);font-size:13px;margin-bottom:2px}
+.s-text span{color:var(--dim);font-size:12px}
+
+.safety-badge{
+  border:1px solid var(--border);
+  background:var(--bg3);
+  padding:40px 28px;
+  text-align:center;
+  position:relative;
+}
+.safety-badge::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  box-shadow:inset 1px 0 0 var(--sect),inset 0 1px 0 var(--sect);
+}
+.shield-svg{
+  width:56px;margin:0 auto 18px;
+  color:#55AA55;display:block;
+  filter:drop-shadow(0 0 16px rgba(85,170,85,.3));
+}
+.badge-title{
+  font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;
+  color:#55AA55;margin-bottom:8px;
+}
+.badge-sub{color:var(--dim);font-size:13px;line-height:1.6}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:0}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--bg2);border-top:1px solid var(--border);
+  text-align:center;padding:40px 24px;
+  color:var(--dim);font-size:12px;
+}
+.footer-logo{
+  font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;
+  color:var(--white);margin-bottom:8px;letter-spacing:2px;
+}
+.footer-logo span{color:var(--blue2)}
+footer a{color:var(--blue2);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulse{
+  0%,100%{opacity:.4}50%{opacity:.9}
+}
+
+/* download icon */
+.dl-ico{width:12px;height:14px;fill:currentColor;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#"><span>Zenith</span>X</a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#safety">Safety</a></li>
+    <li><a href="wiki">Wiki</a></li>
+    <li><a href="https://discord.gg/bavsasPB8N" target="_blank">Discord</a></li>
+    <li><a href="#download" class="dl">Download</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <video id="bg-video" autoplay muted loop playsinline>
+    <!-- <source src="mc_gameplay.mp4" type="video/mp4"> -->
+  </video>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Minecraft Fabric Mod · 26.1.2</div>
+
+    <h1>Zenith<em>X</em></h1>
+
+    <p class="hero-sub">
+      Host worlds for free. Connect with friends.<br>
+      No server required.
+    </p>
+
+    <!-- NEW INFO LINE -->
+    <p class="hero-sub" style="margin-top:12px;font-size:12px;opacity:.85">
+      Coming soon to <strong>Modrinth</strong> and <strong>CurseForge</strong>.<br><br>
+
+      Virus scan report:
+      <a href="https://www.virustotal.com/gui/file/f5fc6439caabdfa491b87158540016f1bf8e844012b47b1efc9cb72c16c55e8e?nocache=1"
+         target="_blank"
+         style="color:#3A6AA8;text-decoration:underline;">
+         View on VirusTotal
+      </a>
+    </p>
+
+    <div class="hero-btns">
+      <a href="#download" class="mc-btn" id="download">
+        <svg class="dl-ico" viewBox="0 0 12 14">
+          <path d="M6 10L1 5h3V0h4v5h3L6 10z"/>
+          <rect x="0" y="12" width="12" height="2" rx="1"/>
+        </svg>
+        Download
+      </a>
+
+      <a href="wiki" class="mc-btn gray">Wiki</a>
+      <a href="https://discord.gg/bavsasPB8N" target="_blank" class="mc-btn gray">Discord</a>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+    Scroll
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section">
+    <div class="section-label">What ZenithX does</div>
+    <div class="section-title">Everything you need<br>to play together.</div>
+
+    <div class="features-grid">
+      <div class="feat">
+        <div class="feat-icon">🌍</div>
+        <div class="feat-title">Host Worlds</div>
+        <div class="feat-desc">Open your singleplayer world to friends instantly — no port forwarding, no server setup required.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">👥</div>
+        <div class="feat-title">Friends System</div>
+        <div class="feat-desc">Add friends by username, see who's online, and manage your friend list directly in-game.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📩</div>
+        <div class="feat-title">Instant Invites</div>
+        <div class="feat-desc">Send and receive world invitations in real time. One click and your friend joins your world.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">⚙️</div>
+        <div class="feat-title">World Settings</div>
+        <div class="feat-desc">Configure game mode, difficulty, cheats, and resource pack sharing before launching.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔔</div>
+        <div class="feat-title">Notifications</div>
+        <div class="feat-desc">In-game toast notifications for friend requests, invites, and mod updates.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔄</div>
+        <div class="feat-title">Auto Updates</div>
+        <div class="feat-desc">ZenithX checks for updates on launch and shows a button when a new version is ready.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SAFETY -->
+<section id="safety">
+  <div class="safety-inner">
+    <div>
+      <div class="section-label">Security &amp; Safety</div>
+      <div class="section-title" style="margin-bottom:28px">100% Safe<br>to Use.</div>
+      <p style="color:var(--dim);font-size:13px;line-height:1.75;margin-bottom:28px">
+        ZenithX is a fully client-side Fabric mod. It does not modify game files,
+        inject malicious code, or collect personal data. Connections go through our
+        secure relay server with rate limiting and no data retention.
+      </p>
+      <div class="safety-list">
+        <div class="safety-row">
+          <div class="s-icon" style="color:#55AA55">✓</div>
+          <div class="s-text">
+            <strong>No Malware</strong>
+            <span>Open codebase — zero malicious code</span>
+          </div>
+        </div>
+        <div class="safety-row">
+          <div class="s-icon" style="color:var(--blue2)">🔒</div>
+          <div class="s-text">
+            <strong>No Data Collection</strong>
+            <span>Only your Minecraft username is transmitted</span>
+          </div>
+        </div>
+        <div class="safety-row">
+          <div class="s-icon" style="color:#C8A03C">⚡</div>
+          <div class="s-text">
+            <strong>Client-Side Only</strong>
+            <span>Does not touch or modify server files</span>
+          </div>
+        </div>
+        <div class="safety-row">
+          <div class="s-icon" style="color:#55AA55">🛡️</div>
+          <div class="s-text">
+            <strong>Rate Limited</strong>
+            <span>Relay server protected against abuse</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="safety-badge">
+      <svg class="shield-svg" viewBox="0 0 56 64" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M28 4L6 13v17c0 13 9 24 22 28 13-4 22-15 22-28V13L28 4z"/>
+        <path d="M19 32l7 7 11-11" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="badge-title">Verified Safe</div>
+      <div class="badge-sub">ZenithX is 100% safe.<br>No viruses, no data theft, no tricks.</div>
+      <div style="margin-top:24px">
+        <a href="ZenithX.jar" download class="mc-btn green" style="justify-content:center">
+          <svg class="dl-ico" viewBox="0 0 12 14"><path d="M6 10L1 5h3V0h4v5h3L6 10z"/><rect x="0" y="12" width="12" height="2" rx="1"/></svg>
+          Download Free
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span>Zenith</span>X</div>
+  <p style="margin-bottom:10px">Made by <strong style="color:var(--text)">Adam_CollinsYT</strong>, ALKRKY99, xek</p>
+  <p>
+    <a href="https://discord.gg/bavsasPB8N" target="_blank">Discord</a> ·
+    <a href="wiki">Wiki</a> ·
+    <a href="#download">Download</a>
+  </p>
+  <p style="margin-top:14px;font-size:11px;opacity:.35">
+    ZenithX is not affiliated with Mojang or Microsoft.
+  </p>
+</footer>
+
+</body>
+</html>

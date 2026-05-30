@@ -10,6 +10,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.storage.LevelSummary;
 import org.adam.zenithx.FriendManager;
 import org.adam.zenithx.HostClient;
 
@@ -108,11 +109,30 @@ public class FriendsScreen extends HostBaseScreen {
     private List<String> requests = new ArrayList<>();
     private List<String> invites  = new ArrayList<>();
 
+
+    private String selectedFriend = null;
     private final HostBaseScreen parent;
+    private final LevelSummary worldToHost;
+
+    private void startHosting() {
+        if (worldToHost == null) return;
+        try {
+            minecraft.createWorldOpenFlows().openWorld(worldToHost.getLevelId(), () -> {});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public FriendsScreen(HostBaseScreen parent) {
         super(Component.literal("Invite Friends"));
         this.parent = parent;
+        this.worldToHost = null;
+    }
+
+    public FriendsScreen(HostBaseScreen parent, LevelSummary world) {
+        super(Component.literal("Invite Friends"));
+        this.parent = parent;
+        this.worldToHost = world;
     }
 
     private int px() { return (width  - PW) / 2; }
@@ -190,6 +210,18 @@ public class FriendsScreen extends HostBaseScreen {
                 btn -> setTab(Tab.INVITES)
         );
         addRenderableWidget(tabInvites);
+
+        if (worldToHost != null) {
+            addRenderableWidget(new MenuButton(
+                    px + PW / 2 - 52,
+                    py + PH - 42,
+                    104,
+                    16,
+                    Component.literal("Host World"),
+                    MenuButton.GREEN, MenuButton.LIGHT_GREEN, MenuButton.DISABLED, true,
+                    btn -> startHosting()
+            ));
+        }
 
         // ── Done button ───────────────────────────────────────────────────────
         addRenderableWidget(new MenuButton(
@@ -336,23 +368,16 @@ public class FriendsScreen extends HostBaseScreen {
         super.extractRenderState(gfx, mx, my, a);
     }
 
-    // -----------------------------------------------------------------------
-    // drawTabs — الخلفية فقط، الأزرار نفسها يرسمها الـ widget system
-    // -----------------------------------------------------------------------
-
     private void drawTabs(GuiGraphicsExtractor gfx, int px, int py) {
         int tabW = (PW - 6) / 3;
         int ty   = py + 52;
 
-        // خلفية شريط التابات
         gfx.fill(px + 2, ty, px + PW - 2, ty + 18, 0xFF1C1C1C);
         gfx.outline(px + 2, ty, PW - 4, 18, C_BORDER);
 
-        // فواصل عمودية بين التابات
         gfx.fill(px + 2 + tabW,     ty + 2, px + 3 + tabW,     ty + 16, C_BORDER);
         gfx.fill(px + 4 + tabW * 2, ty + 2, px + 5 + tabW * 2, ty + 16, C_BORDER);
 
-        // خط تحت التاب المختار
         int atx = switch (tab) {
             case FRIENDS  -> px + 2;
             case REQUESTS -> px + 3 + tabW;
