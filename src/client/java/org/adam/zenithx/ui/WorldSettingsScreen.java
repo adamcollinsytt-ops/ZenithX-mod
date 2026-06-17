@@ -19,10 +19,10 @@ public class WorldSettingsScreen extends HostBaseScreen {
     private static final int C_TEXT   = 0xFFD4D0C8;
     private static final int C_DIM    = 0xFF888888;
 
-    private String gameMode  = "Survival";
+    private String gameMode   = "Survival";
     private String difficulty = "Normal";
-    private boolean cheats   = false;
-    private boolean shareRP  = false;
+    private boolean cheats    = false;
+    private boolean shareRP   = false;
 
     private boolean gameModeOpen   = false;
     private boolean difficultyOpen = false;
@@ -30,7 +30,6 @@ public class WorldSettingsScreen extends HostBaseScreen {
     private static final String[] GAMEMODES    = {"Survival", "Creative", "Adventure", "Spectator"};
     private static final String[] DIFFICULTIES = {"Peaceful", "Easy", "Normal", "Hard"};
 
-    // world = null إذا جاء من PauseScreen
     private final LevelSummary world;
     private final HostBaseScreen parent;
 
@@ -47,7 +46,6 @@ public class WorldSettingsScreen extends HostBaseScreen {
     protected void init() {
         int px = px(), py = py();
 
-        // Back
         addRenderableWidget(new MenuButton(
                 px + 8, py + PH - 24, (PW - 20) / 2, 18,
                 Component.literal("Back"),
@@ -61,7 +59,6 @@ public class WorldSettingsScreen extends HostBaseScreen {
                 }
         ));
 
-        // Next
         addRenderableWidget(new MenuButton(
                 px + 12 + (PW - 20) / 2, py + PH - 24, (PW - 20) / 2, 18,
                 Component.literal("Next"),
@@ -110,9 +107,8 @@ public class WorldSettingsScreen extends HostBaseScreen {
 
         super.extractRenderState(gfx, mx, my, a);
 
-        // Dropdowns فوق كل شي
-        if (gameModeOpen)   drawDropdown(gfx, px, py + 62 + 22,          GAMEMODES,    gameMode,   mx, my);
-        if (difficultyOpen) drawDropdown(gfx, px, py + 62 + (22+6) + 22, DIFFICULTIES, difficulty, mx, my);
+        if (gameModeOpen)   drawDropdown(gfx, px, py + 62 + 22,              GAMEMODES,    gameMode,   mx, my);
+        if (difficultyOpen) drawDropdown(gfx, px, py + 62 + (22 + 6) + 22,  DIFFICULTIES, difficulty, mx, my);
     }
 
     private void drawSettingRow(GuiGraphicsExtractor gfx, int px, int y,
@@ -129,7 +125,6 @@ public class WorldSettingsScreen extends HostBaseScreen {
         gfx.outline(bx, y, bw, rowH, open ? 0xFF4A90D9 : 0xFF3A3A3A);
         gfx.text(font, Component.literal(value), bx + 6, y + (rowH - 7) / 2, C_TEXT);
 
-        // Arrow ▼
         int ax = bx + bw - 14, ay = y + rowH / 2 - 2;
         gfx.fill(ax,     ay,     ax + 7, ay + 1, C_DIM);
         gfx.fill(ax + 1, ay + 1, ax + 6, ay + 2, C_DIM);
@@ -166,8 +161,8 @@ public class WorldSettingsScreen extends HostBaseScreen {
             int iy = y + i * itemH;
             boolean hov = mx >= bx && mx < bx + w && my >= iy && my < iy + itemH;
             boolean sel = options[i].equals(selected);
-            if (sel)       gfx.fill(bx + 1, iy, bx + w - 1, iy + itemH, 0xFF1E3050);
-            else if (hov)  gfx.fill(bx + 1, iy, bx + w - 1, iy + itemH, 0xFF2A2A2A);
+            if (sel)      gfx.fill(bx + 1, iy, bx + w - 1, iy + itemH, 0xFF1E3050);
+            else if (hov) gfx.fill(bx + 1, iy, bx + w - 1, iy + itemH, 0xFF2A2A2A);
             gfx.text(font, Component.literal(options[i]),
                     bx + 6, iy + (itemH - 7) / 2, sel ? 0xFFFFFFFF : C_TEXT);
             if (i < options.length - 1)
@@ -175,7 +170,6 @@ public class WorldSettingsScreen extends HostBaseScreen {
         }
     }
 
-    // helper overload
     private void drawDropdown(GuiGraphicsExtractor gfx, int px, int y,
                               String[] options, String selected, int mx, int my) {
         drawDropdown(gfx, px, y, 100, options, selected, mx, my);
@@ -185,66 +179,63 @@ public class WorldSettingsScreen extends HostBaseScreen {
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean dc) {
         if (event.button() != 0) return super.mouseClicked(event, dc);
 
-        double mx = event.x(), my = event.y();
+        int mx = (int) event.x();
+        int my = (int) event.y();
         int px = px(), py = py();
         int rowH = 22;
         int itemH = 16;
         int bx = px + PW - 108;
+        int bw = 100;
 
-        // GameMode dropdown اختيار
         if (gameModeOpen) {
-            int by = py + 62 + 22;
+            int dropY = py + 62 + rowH;
             for (int i = 0; i < GAMEMODES.length; i++) {
-                int iy = by + i * itemH;
-                if (mx >= bx && mx < bx + 100 && my >= iy && my < iy + itemH) {
+                int iy = dropY + i * itemH;
+                if (mx >= bx && mx < bx + bw && my >= iy && my < iy + itemH) {
                     gameMode = GAMEMODES[i];
+                    gameModeOpen = false;
+                    return true;
                 }
             }
             gameModeOpen = false;
             return true;
         }
 
-        // Difficulty dropdown اختيار
         if (difficultyOpen) {
-            int by = py + 62 + (rowH + 6) + 22;
+            int dropY = py + 62 + (rowH + 6) + rowH;
             for (int i = 0; i < DIFFICULTIES.length; i++) {
-                int iy = by + i * itemH;
-                if (mx >= bx && mx < bx + 100 && my >= iy && my < iy + itemH) {
+                int iy = dropY + i * itemH;
+                if (mx >= bx && mx < bx + bw && my >= iy && my < iy + itemH) {
                     difficulty = DIFFICULTIES[i];
+                    difficultyOpen = false;
+                    return true;
                 }
             }
             difficultyOpen = false;
             return true;
         }
 
-        // فتح GameMode dropdown
-        int gmBy = py + 62;
-        if (mx >= bx && mx < bx + 100 && my >= gmBy && my < gmBy + rowH) {
-            gameModeOpen = true;
-            return true;
+        if (mx >= bx && mx < bx + bw) {
+            int gmY = py + 62;
+            int dfY = py + 62 + (rowH + 6);
+            if (my >= gmY && my < gmY + rowH) { gameModeOpen = true; return true; }
+            if (my >= dfY && my < dfY + rowH) { difficultyOpen = true; return true; }
         }
 
-        // فتح Difficulty dropdown
-        int dfBy = py + 62 + rowH + 6;
-        if (mx >= bx && mx < bx + 100 && my >= dfBy && my < dfBy + rowH) {
-            difficultyOpen = true;
-            return true;
-        }
-
-        // Cheats toggle
-        int chY = py + 62 + (rowH + 6) * 2;
         int tw = 32, th = 14;
         int tx = px + PW - 50;
-        if (mx >= tx && mx < tx + tw && my >= chY + (rowH-th)/2 && my < chY + (rowH-th)/2 + th) {
-            cheats = !cheats;
-            return true;
-        }
+        int cheatsY  = py + 62 + (rowH + 6) * 2;
+        int shareRPY = py + 62 + (rowH + 6) * 3;
 
-        // Share RP toggle
-        int rpY = py + 62 + (rowH + 6) * 3;
-        if (mx >= tx && mx < tx + tw && my >= rpY + (rowH-th)/2 && my < rpY + (rowH-th)/2 + th) {
-            shareRP = !shareRP;
-            return true;
+        if (mx >= tx && mx < tx + tw) {
+            if (my >= cheatsY + (rowH - th) / 2 && my < cheatsY + (rowH - th) / 2 + th) {
+                cheats = !cheats;
+                return true;
+            }
+            if (my >= shareRPY + (rowH - th) / 2 && my < shareRPY + (rowH - th) / 2 + th) {
+                shareRP = !shareRP;
+                return true;
+            }
         }
 
         return super.mouseClicked(event, dc);

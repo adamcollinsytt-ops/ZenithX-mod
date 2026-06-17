@@ -4,8 +4,6 @@
   "package": "org.adam.zenithx.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "LowFireMixin",
-    "NoTotemOverlayMixin",
     "PauseScreenMixin",
     "MixinIntegratedServer",
     "GameRendererMixin",

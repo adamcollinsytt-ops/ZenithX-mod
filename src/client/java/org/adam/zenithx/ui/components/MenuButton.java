@@ -106,7 +106,14 @@ public class MenuButton extends AbstractButton {
                 case 2 -> iconX = this.getX() + this.getWidth() + iconSpacing;
             }
 
-            graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, iconIdentifier, iconX, iconY, iconSize, iconSize);
+            graphics.blit(
+                    net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+                    iconIdentifier,
+                    iconX, iconY,
+                    0, 0,
+                    iconSize, iconSize,
+                    iconSize, iconSize
+            );
         }
 
         graphics.centeredText(font, this.getMessage(), textX, textY, style.textColor);

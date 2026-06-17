@@ -6,12 +6,11 @@ public class FriendManager {
 
     private static FriendManager instance;
 
-    private final Set<String> friends = new LinkedHashSet<>();
-    private final List<String> requests = new ArrayList<>();
-    private final List<String> invites = new ArrayList<>();
-
-    private final Map<String, Long> lastSeen = new HashMap<>();
-    private final Set<String> onlinePlayers = new HashSet<>();
+    private final Set<String>    friends       = new LinkedHashSet<>();
+    private final List<String>   requests      = new ArrayList<>();
+    private final List<String>   invites       = new ArrayList<>();
+    private final Map<String, Long> lastSeen   = new HashMap<>();
+    private final Set<String>    onlinePlayers = new HashSet<>();
 
     public static FriendManager getInstance() {
         if (instance == null) instance = new FriendManager();
@@ -71,21 +70,12 @@ public class FriendManager {
     }
 
     public void setOnlinePlayers(Collection<String> players) {
-
         long now = System.currentTimeMillis();
-
         Set<String> newSet = new HashSet<>();
-
-        if (players != null) {
-            newSet.addAll(players);
-        }
-
+        if (players != null) newSet.addAll(players);
         for (String old : onlinePlayers) {
-            if (!newSet.contains(old)) {
-                lastSeen.put(old, now);
-            }
+            if (!newSet.contains(old)) lastSeen.put(old, now);
         }
-
         onlinePlayers.clear();
         onlinePlayers.addAll(newSet);
     }
@@ -96,31 +86,20 @@ public class FriendManager {
     }
 
     public String getLastSeenText(String name) {
-
-        if (onlinePlayers.contains(name)) {
-            return "";
-        }
-
+        if (onlinePlayers.contains(name)) return "";
         long last = lastSeen.getOrDefault(name, 0L);
         if (last == 0) return "(Offline)";
-
-        long diff = System.currentTimeMillis() - last;
-
+        long diff    = System.currentTimeMillis() - last;
         long seconds = diff / 1000;
-        if (seconds < 60) return "(Offline " + seconds + "s ago)";
-
+        if (seconds < 60)  return "(Offline " + seconds + "s ago)";
         long minutes = seconds / 60;
-        if (minutes < 60) return "(Offline " + minutes + "m ago)";
-
+        if (minutes < 60)  return "(Offline " + minutes + "m ago)";
         long hours = minutes / 60;
-        if (hours < 24) return "(Offline " + hours + "h ago)";
-
+        if (hours < 24)    return "(Offline " + hours   + "h ago)";
         long days = hours / 24;
-        if (days < 7) return "(Offline " + days + "d ago)";
-
+        if (days < 7)      return "(Offline " + days    + "d ago)";
         long weeks = days / 7;
-        if (weeks < 52) return "(Offline " + weeks + "w ago)";
-
+        if (weeks < 52)    return "(Offline " + weeks   + "w ago)";
         long years = weeks / 52;
         return "(Offline " + years + "y ago)";
     }

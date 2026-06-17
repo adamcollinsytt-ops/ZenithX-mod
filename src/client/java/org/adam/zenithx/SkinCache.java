@@ -91,72 +91,38 @@ public class SkinCache {
     }
 
     private static void fetchAndRegister(String username) {
-
         try {
+            String cleanUsername = username.toLowerCase();
 
-            username = username.toLowerCase();
-
-            String uuid = fetchUUID(username);
-
-            if (uuid == null) {
-                FETCHING.remove(username);
-                return;
-            }
+            String uuid = fetchUUID(cleanUsername);
+            if (uuid == null) { FETCHING.remove(cleanUsername); return; }
 
             String skinUrl = fetchSkinUrl(uuid);
-
-            if (skinUrl == null) {
-                FETCHING.remove(username);
-                return;
-            }
+            if (skinUrl == null) { FETCHING.remove(cleanUsername); return; }
 
             NativeImage skin = download(skinUrl);
-
-            if (skin == null) {
-                FETCHING.remove(username);
-                return;
-            }
+            if (skin == null) { FETCHING.remove(cleanUsername); return; }
 
             NativeImage face = cropFace(skin);
-
             skin.close();
 
-            String finalUsername = username;
-
             Minecraft.getInstance().execute(() -> {
-
                 try {
-
-                    Identifier id =
-                            Identifier.fromNamespaceAndPath(
-                                    "zenithx",
-                                    "skin/" + finalUsername
-                            );
-
-                    DynamicTexture texture =
-                            new DynamicTexture(
-                                    () -> "face:" + finalUsername,
-                                    face
-                            );
-
-                    Minecraft.getInstance()
-                            .getTextureManager()
-                            .register(id, texture);
-
-                    READY.put(finalUsername, id);
-
+                    Identifier id = Identifier.fromNamespaceAndPath("zenithx", "skin/" + cleanUsername);
+                    DynamicTexture texture = new DynamicTexture(() -> "skin:" + cleanUsername, face);
+                    Minecraft.getInstance().getTextureManager().register(id, texture);
+                    READY.put(cleanUsername, id);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    face.close();
                 }
-
-                FETCHING.remove(finalUsername);
+                FETCHING.remove(cleanUsername);
             });
 
+        } catch (java.net.http.HttpTimeoutException e) {
+            System.out.println("[ZenithX] Timeout fetching skin for: " + username);
+            FETCHING.remove(username.toLowerCase());
         } catch (Exception e) {
-
-            FETCHING.remove(username);
-
-            e.printStackTrace();
+            FETCHING.remove(username.toLowerCase());
         }
     }
 

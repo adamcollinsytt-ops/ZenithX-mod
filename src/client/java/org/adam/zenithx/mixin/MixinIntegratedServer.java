@@ -10,14 +10,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(IntegratedServer.class)
 public class MixinIntegratedServer {
 
-    @Inject(method = "publishServer", at = @At("HEAD"))
-    private void disableAuthOnPublish(
-            GameType gameMode,
-            boolean allowCommands,
-            int port,
-            CallbackInfoReturnable<Boolean> cir) {
-
-        IntegratedServer self = (IntegratedServer)(Object)this;
-        self.setUsesAuthentication(false);
+    @Inject(method = "publishServer", at = @At("RETURN"))
+    private void disableAuthOnPublish(GameType gameMode, boolean allowCommands, int port, CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValue()) {
+            ((IntegratedServer)(Object)this).setUsesAuthentication(false);
+        }
     }
 }

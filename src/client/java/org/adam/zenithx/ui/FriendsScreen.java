@@ -43,64 +43,38 @@ public class FriendsScreen extends HostBaseScreen {
     private static final int C_REJECT_B = 0xFF6A1212;
     private static final int C_PLUS     = 0xFF2E2E2E;
     private static final int C_PLUS_B   = 0xFF484848;
-    private static final int C_ADDBTN   = 0xFF2A5296;
-    private static final int C_ADDBTN_B = 0xFF1A3A76;
     private static final int C_BADGE    = 0xFFC03030;
     private static final int C_WHITE    = 0xFFFFFFFF;
     private static final int C_SCRBAR   = 0xFF181818;
     private static final int C_SCRTHUMB = 0xFF484848;
     private static final int C_ROWLINE  = 0xFF222222;
 
-    private static final int KEY_ENTER    = 257;
-    private static final int KEY_KP_ENTER = 335;
-
     private static final MenuButton.Style STYLE_DEFAULT =
-            new MenuButton.Style(C_TEXT,    0xFF252525, C_BORDER);
-
+            new MenuButton.Style(C_TEXT,  0xFF252525, C_BORDER);
     private static final MenuButton.Style STYLE_TAB_ACTIVE =
-            new MenuButton.Style(C_WHITE,   C_TABSEL,  C_TABLINE);
-
+            new MenuButton.Style(C_WHITE, C_TABSEL,  C_TABLINE);
     private static final MenuButton.Style STYLE_TAB_HOVER =
-            new MenuButton.Style(C_WHITE,   0xFF303030, C_BORDER);
-
+            new MenuButton.Style(C_WHITE, 0xFF303030, C_BORDER);
     private static final MenuButton.Style STYLE_PLUS =
-            new MenuButton.Style(C_WHITE,   C_PLUS,    C_PLUS_B);
+            new MenuButton.Style(C_WHITE, C_PLUS,    C_PLUS_B);
     private static final MenuButton.Style STYLE_PLUS_HOV =
-            new MenuButton.Style(C_WHITE,   C_PLUS_B,  C_BORDER);
-
-    private static final MenuButton.Style STYLE_ADD =
-            new MenuButton.Style(C_WHITE,   C_ADDBTN,  C_ADDBTN_B);
-    private static final MenuButton.Style STYLE_ADD_HOV =
-            new MenuButton.Style(C_WHITE,   C_ADDBTN_B, C_TABLINE);
-
+            new MenuButton.Style(C_WHITE, C_PLUS_B,  C_BORDER);
     private static final MenuButton.Style STYLE_ACCEPT =
-            new MenuButton.Style(C_WHITE,   C_ACCEPT,  C_ACCEPT_B);
+            new MenuButton.Style(C_WHITE, C_ACCEPT,  C_ACCEPT_B);
     private static final MenuButton.Style STYLE_ACCEPT_HOV =
-            new MenuButton.Style(C_WHITE,   C_ACCEPT_B, 0xFF2A5A10);
-
+            new MenuButton.Style(C_WHITE, C_ACCEPT_B, 0xFF2A5A10);
     private static final MenuButton.Style STYLE_REJECT =
-            new MenuButton.Style(C_WHITE,   C_REJECT,  C_REJECT_B);
+            new MenuButton.Style(C_WHITE, C_REJECT,  C_REJECT_B);
     private static final MenuButton.Style STYLE_REJECT_HOV =
-            new MenuButton.Style(C_WHITE,   C_REJECT_B, 0xFF4A0A0A);
-
-    private static final MenuButton.Style STYLE_DONE =
-            new MenuButton.Style(C_TEXT,    0xFF1E2233, C_BORDER);
-    private static final MenuButton.Style STYLE_DONE_HOV =
-            new MenuButton.Style(C_WHITE,   0xFF2A3050, C_TABLINE);
-
-    // -----------------------------------------------------------------------
+            new MenuButton.Style(C_WHITE, C_REJECT_B, 0xFF4A0A0A);
 
     private enum Tab { FRIENDS, REQUESTS, INVITES }
     private Tab tab = Tab.FRIENDS;
 
-    private int     scrollY = 0;
-    private String  query   = "";
-    private boolean addMode = false;
+    private int    scrollY = 0;
+    private String query   = "";
 
     private EditBox    searchBox;
-    private EditBox    addFriendBox;
-    private MenuButton addFriendBtn;
-
     private MenuButton tabFriends;
     private MenuButton tabRequests;
     private MenuButton tabInvites;
@@ -109,10 +83,8 @@ public class FriendsScreen extends HostBaseScreen {
     private List<String> requests = new ArrayList<>();
     private List<String> invites  = new ArrayList<>();
 
-
-    private String selectedFriend = null;
     private final HostBaseScreen parent;
-    private final LevelSummary worldToHost;
+    private final LevelSummary   worldToHost;
 
     private void startHosting() {
         if (worldToHost == null) return;
@@ -125,28 +97,23 @@ public class FriendsScreen extends HostBaseScreen {
 
     public FriendsScreen(HostBaseScreen parent) {
         super(Component.literal("Invite Friends"));
-        this.parent = parent;
+        this.parent      = parent;
         this.worldToHost = null;
     }
 
     public FriendsScreen(HostBaseScreen parent, LevelSummary world) {
         super(Component.literal("Invite Friends"));
-        this.parent = parent;
+        this.parent      = parent;
         this.worldToHost = world;
     }
 
     private int px() { return (width  - PW) / 2; }
     private int py() { return (height - PH) / 2; }
 
-    // -----------------------------------------------------------------------
-    // init
-    // -----------------------------------------------------------------------
-
     @Override
     protected void init() {
         int px = px(), py = py();
 
-        // ── Search box ──────────────────────────────────────────────────────
         searchBox = new EditBox(font,
                 px + 20, py + 31, PW - 52, 14,
                 Component.literal("search"));
@@ -156,31 +123,14 @@ public class FriendsScreen extends HostBaseScreen {
         searchBox.setResponder(q -> { query = q; scrollY = 0; refresh(); });
         addRenderableWidget(searchBox);
 
-        // ── Add Friend box ───────────────────────────────────────────────────
-        addFriendBox = new EditBox(font,
-                px + 20, py + 31, PW - 52, 14,
-                Component.literal("addFriend"));
-        addFriendBox.setHint(Component.literal("Enter username..."));
-        addFriendBox.setBordered(false);
-        addFriendBox.setMaxLength(32);
-        addFriendBox.setVisible(false);
-        addRenderableWidget(addFriendBox);
-
-        // ── + / ✓ button ─────────────────────────────────────────────────────
-        addFriendBtn = new MenuButton(
+        addRenderableWidget(new MenuButton(
                 px + PW - 30, py + 27, 22, 22,
                 Component.literal("+"),
                 STYLE_PLUS, STYLE_PLUS_HOV,
-                MenuButton.DISABLED,
-                true,
-                btn -> {
-                    if (addMode) sendFriendRequest();
-                    else         toggleAddMode();
-                }
-        );
-        addRenderableWidget(addFriendBtn);
+                MenuButton.DISABLED, true,
+                btn -> minecraft.setScreen(new AddFriendScreen(this))
+        ));
 
-        // ── Tab buttons ───────────────────────────────────────────────────────
         int tabW = (PW - 6) / 3;
         int tabY = py + 52;
 
@@ -215,43 +165,28 @@ public class FriendsScreen extends HostBaseScreen {
             addRenderableWidget(new MenuButton(
                     px + PW / 2 - 52,
                     py + PH - 42,
-                    104,
-                    16,
+                    104, 16,
                     Component.literal("Host World"),
                     MenuButton.GREEN, MenuButton.LIGHT_GREEN, MenuButton.DISABLED, true,
                     btn -> startHosting()
             ));
         }
 
-        // ── Done button ───────────────────────────────────────────────────────
         addRenderableWidget(new MenuButton(
                 px + PW / 2 - 52,
                 py + PH - 21,
-                104,
-                16,
+                104, 16,
                 Component.literal("Done"),
-
-                MenuButton.BLUE,
-                MenuButton.LIGHT_BLUE,
-
-                MenuButton.DISABLED,
-                true,
-
+                MenuButton.BLUE, MenuButton.LIGHT_BLUE, MenuButton.DISABLED, true,
                 btn -> {
-                    if (parent != null)
-                        minecraft.setScreen(parent);
-                    else
-                        onClose();
+                    if (parent != null) minecraft.setScreen(parent);
+                    else onClose();
                 }
         ));
 
         refresh();
         updateTabStyles();
     }
-
-    // -----------------------------------------------------------------------
-    // Tab logic
-    // -----------------------------------------------------------------------
 
     private void setTab(Tab t) {
         tab = t;
@@ -261,58 +196,21 @@ public class FriendsScreen extends HostBaseScreen {
     }
 
     private void updateTabStyles() {
-        if (tabFriends  == null) return;
+        if (tabFriends == null) return;
         tabFriends .setDefaultStyle(tab == Tab.FRIENDS  ? STYLE_TAB_ACTIVE : STYLE_DEFAULT);
         tabRequests.setDefaultStyle(tab == Tab.REQUESTS ? STYLE_TAB_ACTIVE : STYLE_DEFAULT);
         tabInvites .setDefaultStyle(tab == Tab.INVITES  ? STYLE_TAB_ACTIVE : STYLE_DEFAULT);
     }
 
-    // -----------------------------------------------------------------------
-    // Add-mode toggle
-    // -----------------------------------------------------------------------
-
-    private void toggleAddMode() {
-        addMode = !addMode;
-        if (addMode) {
-            searchBox.setVisible(false);
-            addFriendBox.setVisible(true);
-            addFriendBox.setValue("");
-            setFocused(addFriendBox);
-            addFriendBtn.setMessage(Component.literal("✓"));
-            addFriendBtn.setDefaultStyle(STYLE_ADD);
-            addFriendBtn.setHoverStyle(STYLE_ADD_HOV);
-        } else {
-            addFriendBox.setVisible(false);
-            searchBox.setVisible(true);
-            addFriendBtn.setMessage(Component.literal("+"));
-            addFriendBtn.setDefaultStyle(STYLE_PLUS);
-            addFriendBtn.setHoverStyle(STYLE_PLUS_HOV);
-        }
-    }
-
-    private void sendFriendRequest() {
-        String name = addFriendBox.getValue().trim();
-        if (!name.isEmpty()) {
-            HostClient.getInstance().sendFriendRequest(name);
-        }
-        toggleAddMode();
-    }
-
-    // -----------------------------------------------------------------------
-    // Data refresh
-    // -----------------------------------------------------------------------
-
     private void refresh() {
         FriendManager fm = FriendManager.getInstance();
         String q = query;
-
         friends  = fm.getFriends().stream()
                 .filter(n -> q.isEmpty() || n.contains(q)).toList();
         requests = fm.getPendingRequests().stream()
                 .filter(n -> q.isEmpty() || n.contains(q)).toList();
         invites  = fm.getPendingInvites().stream()
                 .filter(n -> q.isEmpty() || n.contains(q)).toList();
-
         friends.forEach(SkinCache::request);
         requests.forEach(SkinCache::request);
         invites.forEach(SkinCache::request);
@@ -322,49 +220,38 @@ public class FriendsScreen extends HostBaseScreen {
         refresh();
     }
 
-    // -----------------------------------------------------------------------
-    // Render
-    // -----------------------------------------------------------------------
-
     @Override
     public void extractRenderState(GuiGraphicsExtractor gfx, int mx, int my, float a) {
         int px = px(), py = py();
 
-        // Shadow + background
         gfx.fill(px + 4, py + 4, px + PW + 4, py + PH + 4, 0x55000000);
         gfx.fill(px, py, px + PW, py + PH, C_BG);
         gfx.outline(px, py, PW, PH, C_BORDER);
 
-        // Top bar
         gfx.fill(px, py, px + PW, py + 26, C_TOPBAR);
         hline(gfx, px, py + 26, PW, C_BORDER);
         gfx.centeredText(font, Component.literal("Invite Friends"),
                 px + PW / 2, py + 9, C_TEXT);
 
-        // Search / Add Friend bar background
         gfx.fill(px + 8, py + 27, px + PW - 8, py + 49, C_SRCHBG);
         gfx.outline(px + 8, py + 27, PW - 16, 22, C_SECT);
         drawSearchIcon(gfx, px + 10, py + 30);
 
         drawTabs(gfx, px, py);
 
-        // Badges على tabs
         int rqC  = FriendManager.getInstance().getPendingRequests().size();
         int invC = FriendManager.getInstance().getPendingInvites().size();
         int tabW = (PW - 6) / 3;
         if (rqC  > 0) drawBadge(gfx, px + 3 + tabW + tabW - 8,     py + 53, rqC);
         if (invC > 0) drawBadge(gfx, px + 4 + tabW * 2 + tabW - 8, py + 53, invC);
 
-        // List
         int listTop = py + 72, listBot = py + PH - 24;
         drawRows(gfx, px, listTop, listBot, mx, my);
         drawScrollbar(gfx, px + PW - 4, listTop, listBot);
 
-        // Bottom bar
         hline(gfx, px, py + PH - 24, PW, C_BORDER);
         gfx.fill(px + 1, py + PH - 23, px + PW - 1, py + PH - 1, 0xFF1A1E2E);
 
-        // Widgets (EditBoxes + MenuButtons)
         super.extractRenderState(gfx, mx, my, a);
     }
 
@@ -386,10 +273,6 @@ public class FriendsScreen extends HostBaseScreen {
         hline(gfx, atx, ty + 16, tabW, C_TABLINE);
         hline(gfx, atx, ty + 17, tabW, C_TABLINE);
     }
-
-    // -----------------------------------------------------------------------
-    // Rows
-    // -----------------------------------------------------------------------
 
     private void drawRows(GuiGraphicsExtractor gfx,
                           int px, int listTop, int listBot, int mx, int my) {
@@ -418,27 +301,18 @@ public class FriendsScreen extends HostBaseScreen {
             gfx.fill(px + 1, y, px + PW - 5, y + RH, hov ? C_ROW_HOV : C_ROW);
             hline(gfx, px + 1, y + RH - 1, PW - 7, C_ROWLINE);
 
-            // Avatar
             int avX = px + 5, avY = y + (RH - AV) / 2;
             drawAvatar(gfx, avX, avY, row.name);
 
-            // Name
             String extra = FriendManager.getInstance().getLastSeenText(row.name);
-
-            gfx.text(font,
-                    Component.literal(row.name + " " + extra),
-                    px + 26, y + (RH - 7) / 2,
-                    C_TEXT
-            );
+            gfx.text(font, Component.literal(row.name + " " + extra),
+                    px + 26, y + (RH - 7) / 2, C_TEXT);
 
             if (row.type == Row.T.FRIEND) {
                 boolean online = FriendManager.getInstance().isOnline(row.name);
-
                 drawOnlineDot(gfx, px + PW - 48, y + RH / 2 - 3, online);
-
                 drawMenuBtn(gfx, px + PW - 36, y + (RH - 14) / 2, 14, 14,
                         STYLE_PLUS, STYLE_PLUS_HOV, "+", mx, my);
-
                 drawMenuBtn(gfx, px + PW - 20, y + (RH - 14) / 2, 14, 14,
                         STYLE_REJECT, STYLE_REJECT_HOV, "X", mx, my);
             }
@@ -461,28 +335,18 @@ public class FriendsScreen extends HostBaseScreen {
                              String label, int mx, int my) {
         boolean hov = mx >= x && mx < x + w && my >= y && my < y + h;
         MenuButton.Style s = hov ? hover : normal;
-
-        // Base fill
         gfx.fill(x + 1, y + 1, x + w - 1, y + h - 1, s.buttonColor());
-        // Highlight
         gfx.fill(x,     y,     x + 1,     y + h,      s.highlightColor());
         gfx.fill(x + 1, y,     x + w,     y + 1,      s.highlightColor());
-        // Shadow
         gfx.fill(x + w - 1, y,     x + w,     y + h,      s.shadowColor());
         gfx.fill(x,         y + h - 1, x + w - 1, y + h,  s.shadowColor());
-        // Outline
-        gfx.fill(x - 1,  y - 1, x + w + 1, y,      s.outlineColor());
-        gfx.fill(x - 1,  y + h, x + w + 1, y + h + 1, s.outlineColor());
-        gfx.fill(x - 1,  y,     x,         y + h,   s.outlineColor());
-        gfx.fill(x + w,  y,     x + w + 1, y + h,   s.outlineColor());
-        // Label
+        gfx.fill(x - 1,  y - 1, x + w + 1, y,          s.outlineColor());
+        gfx.fill(x - 1,  y + h, x + w + 1, y + h + 1,  s.outlineColor());
+        gfx.fill(x - 1,  y,     x,         y + h,       s.outlineColor());
+        gfx.fill(x + w,  y,     x + w + 1, y + h,       s.outlineColor());
         gfx.centeredText(font, Component.literal(label),
                 x + w / 2, y + (h - 7) / 2, s.textColor());
     }
-
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
 
     private void drawAvatar(GuiGraphicsExtractor gfx, int avX, int avY, String name) {
         Identifier skin = SkinCache.get(name);
@@ -546,10 +410,6 @@ public class FriendsScreen extends HostBaseScreen {
         g.fill(x + 1, y + 2, x + 2, y + 6, 0xFF555555);
     }
 
-    // -----------------------------------------------------------------------
-    // Input
-    // -----------------------------------------------------------------------
-
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) return super.mouseClicked(event, doubleClick);
@@ -567,41 +427,26 @@ public class FriendsScreen extends HostBaseScreen {
 
             if (!row.isSection && my >= y && my < y + RH) {
                 if (row.type == Row.T.FRIEND) {
+                    int yBtn    = y + (RH - 14) / 2;
+                    int inviteX = px + PW - 36;
+                    int removeX = px + PW - 20;
 
-                    int yBtn = y + (RH - 14) / 2;
-
-                    int inviteX = px + PW - 32;
-                    int removeX = px + PW - 16;
-
-                    // + invite
                     if (inBox(mx, my, inviteX, yBtn, 14, 14)) {
-
                         HostClient.getInstance().sendInvite(row.name);
-
-                        NotificationManager.show(
-                                new Notification(
-                                        "ZenithX",
-                                        "Invite sent to " + row.name,
-                                        3.5f,
-                                        false,
-                                        "invite_" + row.name,
-                                        () -> true,
-                                        () -> {},
-                                        () -> {},
-                                        null,
-                                        null
-                                )
-                        );
-
+                        NotificationManager.show(new Notification(
+                                "ZenithX",
+                                "Invite sent to " + row.name,
+                                3.5f, false,
+                                "invite_" + row.name,
+                                () -> true,
+                                () -> {}, () -> {}, null, null
+                        ));
                         return true;
                     }
 
-                    // X remove friend
                     if (inBox(mx, my, removeX, yBtn, 14, 14)) {
-
                         HostClient.getInstance().removeFriend(row.name);
                         FriendManager.getInstance().removeFriend(row.name);
-
                         refresh();
                         return true;
                     }
@@ -639,15 +484,6 @@ public class FriendsScreen extends HostBaseScreen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (addMode && addFriendBox.isFocused()
-                && (event.key() == KEY_ENTER || event.key() == KEY_KP_ENTER)) {
-            sendFriendRequest();
-            return true;
-        }
-        if (addMode && event.key() == 256) {
-            toggleAddMode();
-            return true;
-        }
         return super.keyPressed(event);
     }
 
@@ -661,10 +497,6 @@ public class FriendsScreen extends HostBaseScreen {
         scrollY = (int) Math.max(0, Math.min(scrollY - sy * RH, Math.max(0, totalH - viewH)));
         return true;
     }
-
-    // -----------------------------------------------------------------------
-    // Row data model
-    // -----------------------------------------------------------------------
 
     private List<Row> buildRows() {
         List<Row> rows = new ArrayList<>();
@@ -708,10 +540,6 @@ public class FriendsScreen extends HostBaseScreen {
         return rows;
     }
 
-    // -----------------------------------------------------------------------
-    // Misc
-    // -----------------------------------------------------------------------
-
     private static boolean inBox(double mx, double my, int x, int y, int w, int h) {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
@@ -725,13 +553,8 @@ public class FriendsScreen extends HostBaseScreen {
 
     @Override public boolean isPauseScreen() { return false; }
 
-    // -----------------------------------------------------------------------
-    // Row record
-    // -----------------------------------------------------------------------
-
     private static final class Row {
         enum T { FRIEND, REQUEST, INVITE }
-
         final String  name;
         final T       type;
         final boolean isSection;
