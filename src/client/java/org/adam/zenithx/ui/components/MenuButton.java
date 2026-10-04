@@ -2,14 +2,24 @@ package org.adam.zenithx.ui.components;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+//? } else {
+/*import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;*/
+//? }
+//? if >=1.21.9 && <26 {
+/*import net.minecraft.client.input.InputWithModifiers;*/
+//? }
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.Component;
+//? if >=26 {
 import org.jspecify.annotations.Nullable;
+//? }
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -32,10 +42,18 @@ public class MenuButton extends AbstractButton {
 
     private final boolean clickSound;
     private boolean drawBackground = true;
+    //? if >=26 {
     private @Nullable Supplier<Component> tooltipSupplier;
+    //? } else {
+    /*private Supplier<Component> tooltipSupplier;*/
+    //? }
     private final Consumer<MenuButton> onPress;
 
+    //? if >=26 {
     private @Nullable Identifier iconIdentifier = null;
+    //? } else {
+    /*private ResourceLocation iconIdentifier = null;*/
+    //? }
     private int iconPosition = 0;
     private int iconSize = 8;
     private final int iconSpacing = 4;
@@ -61,19 +79,32 @@ public class MenuButton extends AbstractButton {
         return (this.isHoveredOrFocused()) ? hoverStyle : defaultStyle;
     }
 
+    //? if >=26 {
     public MenuButton setIcon(Identifier iconIdentifier, int position) {
+    //? } else {
+    /*public MenuButton setIcon(ResourceLocation iconIdentifier, int position) {*/
+    //? }
         return setIcon(iconIdentifier, position, 8);
     }
 
+    //? if >=26 {
     public MenuButton setIcon(Identifier iconIdentifier, int position, int size) {
+    //? } else {
+    /*public MenuButton setIcon(ResourceLocation iconIdentifier, int position, int size) {*/
+    //? }
         this.iconIdentifier = iconIdentifier;
         this.iconPosition = position;
         this.iconSize = size;
         return this;
     }
 
+    //? if >=26 {
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    //? } else {
+    /*@Override
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float a) {*/
+    //? }
         Style style = currentStyle();
 
         if (drawBackground) {
@@ -92,10 +123,14 @@ public class MenuButton extends AbstractButton {
             switch (iconPosition) {
                 case -1 -> iconX = this.getX() - iconSize - iconSpacing;
                 case 0 -> {
-                    int totalContentWidth = textWidth + iconSpacing + iconSize;
-                    int startX = this.getX() + (this.getWidth() - totalContentWidth) / 2;
-                    iconX = startX;
-                    textX = startX + iconSize + iconSpacing + (textWidth / 2);
+                    if (this.getMessage().getString().isEmpty()) {
+                        iconX = this.getX() + (this.getWidth() - iconSize) / 2;
+                    } else {
+                        int totalContentWidth = textWidth + iconSpacing + iconSize;
+                        int startX = this.getX() + (this.getWidth() - totalContentWidth) / 2;
+                        iconX = startX;
+                        textX = startX + iconSize + iconSpacing + (textWidth / 2);
+                    }
                 }
                 case 1 -> {
                     int totalContentWidth = textWidth + iconSpacing + iconSize;
@@ -106,6 +141,7 @@ public class MenuButton extends AbstractButton {
                 case 2 -> iconX = this.getX() + this.getWidth() + iconSpacing;
             }
 
+            //? if >=1.21.9 {
             graphics.blit(
                     net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
                     iconIdentifier,
@@ -114,12 +150,29 @@ public class MenuButton extends AbstractButton {
                     iconSize, iconSize,
                     iconSize, iconSize
             );
+            //? } else {
+            /*graphics.blit(
+                    iconIdentifier,
+                    iconX, iconY,
+                    0, 0,
+                    iconSize, iconSize,
+                    iconSize, iconSize
+            );*/
+            //? }
         }
 
+        //? if >=26 {
         graphics.centeredText(font, this.getMessage(), textX, textY, style.textColor);
+        //? } else {
+        /*graphics.drawCenteredString(font, this.getMessage(), textX, textY, style.textColor);*/
+        //? }
     }
 
+    //? if >=26 {
     private void drawStyledBackground(GuiGraphicsExtractor graphics, Style style) {
+    //? } else {
+    /*private void drawStyledBackground(GuiGraphics graphics, Style style) {*/
+    //? }
         int x = getX(), y = getY(), r = x + getWidth(), b = y + getHeight();
         graphics.fill(x + 1, y + 1, r - 1, b - 1, style.buttonColor);
         graphics.fill(x, y, x + 1, b, style.highlightColor);
@@ -133,11 +186,19 @@ public class MenuButton extends AbstractButton {
         graphics.fill(r, y, r + 1, b, ol);
     }
 
+    //? if >=1.21.9 {
     @Override
     public void onPress(InputWithModifiers input) {
         if (!this.active) return;
         onPress.accept(this);
     }
+    //? } else {
+    /*@Override
+    public void onPress() {
+        if (!this.active) return;
+        onPress.accept(this);
+    }*/
+    //? }
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput output) {
@@ -148,6 +209,7 @@ public class MenuButton extends AbstractButton {
         public Style(int textColor, int buttonColor, int outlineColor) {
             this(textColor, buttonColor, outlineColor, brighten(buttonColor, 0.4f), darken(buttonColor, 0.5f, 0x80));
         }
+        //? if >=26 {
         private static int brighten(int argb, float factor) {
             int a = ARGB.alpha(argb);
             int r = Math.min(255, (int) (ARGB.red(argb) * (1f + factor)));
@@ -161,5 +223,27 @@ public class MenuButton extends AbstractButton {
             int b = Math.max(0, (int) (ARGB.blue(argb) * (1f - factor)));
             return ARGB.color(alpha, r, g, b);
         }
+        //? } else {
+        /*private static int argbAlpha(int argb) { return (argb >> 24) & 0xFF; }
+        private static int argbRed(int argb)   { return (argb >> 16) & 0xFF; }
+        private static int argbGreen(int argb) { return (argb >> 8) & 0xFF; }
+        private static int argbBlue(int argb)  { return argb & 0xFF; }
+        private static int argbPack(int a, int r, int g, int b) {
+            return (a << 24) | (r << 16) | (g << 8) | b;
+        }
+        private static int brighten(int argb, float factor) {
+            int a = argbAlpha(argb);
+            int r = Math.min(255, (int) (argbRed(argb) * (1f + factor)));
+            int g = Math.min(255, (int) (argbGreen(argb) * (1f + factor)));
+            int b = Math.min(255, (int) (argbBlue(argb) * (1f + factor)));
+            return argbPack(a, r, g, b);
+        }
+        private static int darken(int argb, float factor, int alpha) {
+            int r = Math.max(0, (int) (argbRed(argb) * (1f - factor)));
+            int g = Math.max(0, (int) (argbGreen(argb) * (1f - factor)));
+            int b = Math.max(0, (int) (argbBlue(argb) * (1f - factor)));
+            return argbPack(alpha, r, g, b);
+        }*/
+        //? }
     }
 }

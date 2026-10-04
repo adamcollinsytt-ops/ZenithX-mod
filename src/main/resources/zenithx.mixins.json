@@ -2,16 +2,16 @@
   "required": true,
   "minVersion": "0.8",
   "package": "org.adam.zenithx.mixin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_21",
   "client": [
     "PauseScreenMixin",
-    "MixinIntegratedServer",
     "GameRendererMixin",
     "GameRendererAccessor",
     "MinecraftRPCMixin",
     "TitleScreenMixin",
-    "PlayerTabOverlayMixin",
-    "NametagMixin"
+    "NametagMixin",
+    "PlayerTagMixin",
+    "MinecraftAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

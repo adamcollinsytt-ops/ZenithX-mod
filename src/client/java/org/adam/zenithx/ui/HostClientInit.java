@@ -1,7 +1,9 @@
-package org.adam.zenithx;
+package org.adam.zenithx.ui;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import org.adam.zenithx.HostClient;
+import org.adam.zenithx.HostMain;
 
 public class HostClientInit implements ClientModInitializer {
 

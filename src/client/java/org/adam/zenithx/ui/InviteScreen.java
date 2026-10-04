@@ -1,6 +1,8 @@
 package org.adam.zenithx.ui;
 
+import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import org.adam.zenithx.FriendManager;
 import org.adam.zenithx.HostClient;

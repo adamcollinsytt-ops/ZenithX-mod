@@ -1,8 +1,14 @@
 package org.adam.zenithx.ui;
 
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.MouseButtonEvent;
+//? } else {
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//? }
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.adam.zenithx.ui.components.MenuButton;
@@ -61,7 +67,6 @@ public class HostWorldScreen extends HostBaseScreen {
         });
         addRenderableWidget(searchBox);
 
-        // Create New World
         addRenderableWidget(new MenuButton(
                 px + 8, py + 52, PW - 16, 20,
                 Component.literal("Create New World"),
@@ -69,14 +74,12 @@ public class HostWorldScreen extends HostBaseScreen {
                 btn -> openCreateWorld()
         ));
 
-        // Cancel
         addRenderableWidget(new MenuButton(
                 px + 8, py + PH - 24, (PW - 20) / 2, 18,
                 Component.literal("Cancel"),
                 btn -> onClose()
         ));
 
-        // Next
         addRenderableWidget(new MenuButton(
                 px + 12 + (PW - 20) / 2, py + PH - 24, (PW - 20) / 2, 18,
                 Component.literal("Next"),
@@ -144,21 +147,26 @@ public class HostWorldScreen extends HostBaseScreen {
                 .collect(Collectors.toList());
     }
 
+    //? if >=26 {
     @Override
     public void extractRenderState(GuiGraphicsExtractor gfx, int mx, int my, float a) {
+    //? } else {
+    /*@Override
+    public void render(GuiGraphics gfx, int mx, int my, float a) {*/
+    //? }
         int px = px(), py = py();
 
         gfx.fill(px + 4, py + 4, px + PW + 4, py + PH + 4, 0x55000000);
         gfx.fill(px, py, px + PW, py + PH, C_BG);
-        gfx.outline(px, py, PW, PH, C_BORDER);
+        outline(gfx, px, py, PW, PH, C_BORDER);
 
         gfx.fill(px, py, px + PW, py + 26, C_TOPBAR);
         hline(gfx, px, py + 26, PW, C_BORDER);
-        gfx.centeredText(font, Component.literal("Select world to host"),
+        cText(gfx, Component.literal("Select world to host"),
                 px + PW / 2, py + 9, C_TEXT);
 
         gfx.fill(px + 8, py + 27, px + PW - 8, py + 49, C_SRCHBG);
-        gfx.outline(px + 8, py + 27, PW - 16, 22, C_SECT);
+        outline(gfx, px + 8, py + 27, PW - 16, 22, C_SECT);
         drawSearchIcon(gfx, px + 10, py + 30);
 
         int listTop = py + 76, listBot = py + PH - 28;
@@ -168,10 +176,43 @@ public class HostWorldScreen extends HostBaseScreen {
         hline(gfx, px, py + PH - 28, PW, C_BORDER);
         gfx.fill(px + 1, py + PH - 27, px + PW - 1, py + PH - 1, 0xFF1A1E2E);
 
+        //? if >=26 {
         super.extractRenderState(gfx, mx, my, a);
+        //? } else {
+        /*super.render(gfx, mx, my, a);*/
+        //? }
     }
 
+    //? if >=26 {
+    private void cText(GuiGraphicsExtractor g, Component text, int x, int y, int color) {
+        g.centeredText(font, text, x, y, color);
+    }
+    private void dText(GuiGraphicsExtractor g, Component text, int x, int y, int color) {
+        g.text(font, text, x, y, color, false);
+    }
+    private void outline(GuiGraphicsExtractor g, int x, int y, int w, int h, int c) {
+        g.outline(x, y, w, h, c);
+    }
+    //? } else {
+    /*private void cText(GuiGraphics g, Component text, int x, int y, int color) {
+        g.drawCenteredString(font, text, x, y, color);
+    }
+    private void dText(GuiGraphics g, Component text, int x, int y, int color) {
+        g.drawString(font, text, x, y, color, false);
+    }
+    private void outline(GuiGraphics g, int x, int y, int w, int h, int c) {
+        g.fill(x,         y,         x + w, y + 1, c);
+        g.fill(x,         y + h - 1, x + w, y + h, c);
+        g.fill(x,         y,         x + 1, y + h, c);
+        g.fill(x + w - 1, y,         x + w, y + h, c);
+    }*/
+    //? }
+
+    //? if >=26 {
     private void drawWorldList(GuiGraphicsExtractor gfx,
+    //? } else {
+    /*private void drawWorldList(GuiGraphics gfx,*/
+    //? }
                                int px, int listTop, int listBot, int mx, int my) {
         gfx.enableScissor(px + 1, listTop, px + PW - 1, listBot);
 
@@ -189,27 +230,32 @@ public class HostWorldScreen extends HostBaseScreen {
             hline(gfx, px + 1, y + RH - 1, PW - 7, C_ROWLINE);
 
             gfx.fill(px + 6, y + 4, px + 34, y + RH - 4, 0xFF2A3A2A);
-            gfx.outline(px + 6, y + 4, 28, RH - 8, 0xFF404040);
+            outline(gfx, px + 6, y + 4, 28, RH - 8, 0xFF404040);
 
-            gfx.text(font, Component.literal(w.getLevelName()), px + 40, y + 6, C_TEXT);
-            gfx.text(font, Component.literal(w.getLevelId()), px + 40, y + 17, C_DIM);
+            dText(gfx, Component.literal(w.getLevelName()), px + 40, y + 6, C_TEXT);
+            dText(gfx, Component.literal(w.getLevelId()), px + 40, y + 17, C_DIM);
 
             y += RH;
         }
 
         if (filtered.isEmpty()) {
-            gfx.centeredText(font, Component.literal("No worlds found"),
+            cText(gfx, Component.literal("No worlds found"),
                     px + PW / 2, listTop + (listBot - listTop) / 2, C_DIM);
         }
 
         gfx.disableScissor();
     }
 
+    //? if >=26 {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) return super.mouseClicked(event, doubleClick);
-
         double mx = event.x(), my = event.y();
+    //? } else {
+    /*@Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (button != 0) return super.mouseClicked(mx, my, button);*/
+    //? }
         int px = px(), py = py();
         int listTop = py + 76, listBot = py + PH - 28;
 
@@ -218,7 +264,11 @@ public class HostWorldScreen extends HostBaseScreen {
             for (int i = 0; i < filtered.size(); i++) {
                 if (my >= y && my < y + RH) {
                     selectedIndex = i;
+                    //? if >=26 {
                     if (doubleClick) {
+                    //? } else {
+                    /*if (false) {*/
+                    //? }
                         minecraft.setScreen(new WorldSettingsScreen(filtered.get(i), this));
                     }
                     return true;
@@ -227,9 +277,14 @@ public class HostWorldScreen extends HostBaseScreen {
             }
         }
 
+        //? if >=26 {
         return super.mouseClicked(event, doubleClick);
+        //? } else {
+        /*return super.mouseClicked(mx, my, button);*/
+        //? }
     }
 
+    //? if >=26 {
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
         int listTop = py() + 76, listBot = py() + PH - 28;
@@ -240,8 +295,24 @@ public class HostWorldScreen extends HostBaseScreen {
         scrollY = (int) Math.max(0, Math.min(scrollY - sy * RH, Math.max(0, totalH - viewH)));
         return true;
     }
+    //? } else {
+    /*@Override
+    public boolean mouseScrolled(double mx, double my, double horizontalAmount, double verticalAmount) {
+        int listTop = py() + 76, listBot = py() + PH - 28;
+        if (mx < px() || mx > px() + PW || my < listTop || my > listBot)
+            return super.mouseScrolled(mx, my, horizontalAmount, verticalAmount);
+        int totalH = filtered.size() * RH;
+        int viewH = listBot - listTop;
+        scrollY = (int) Math.max(0, Math.min(scrollY - verticalAmount * RH, Math.max(0, totalH - viewH)));
+        return true;
+    }*/
+    //? }
 
+    //? if >=26 {
     private void drawScrollbar(GuiGraphicsExtractor g, int x, int top, int bot) {
+    //? } else {
+    /*private void drawScrollbar(GuiGraphics g, int x, int top, int bot) {*/
+    //? }
         int h = bot - top;
         int total = filtered.size() * RH;
         g.fill(x, top, x + 3, bot, 0xFF181818);
@@ -251,7 +322,11 @@ public class HostWorldScreen extends HostBaseScreen {
         g.fill(x, ty, x + 3, ty + th, 0xFF484848);
     }
 
+    //? if >=26 {
     private void drawSearchIcon(GuiGraphicsExtractor g, int x, int y) {
+    //? } else {
+    /*private void drawSearchIcon(GuiGraphics g, int x, int y) {*/
+    //? }
         int ic = 0xFF888888;
         g.fill(x + 2, y,     x + 6, y + 1, ic);
         g.fill(x + 2, y + 6, x + 6, y + 7, ic);
@@ -265,7 +340,11 @@ public class HostWorldScreen extends HostBaseScreen {
         g.fill(x + 8, y + 8, x + 10, y + 10, ic);
     }
 
+    //? if >=26 {
     private void hline(GuiGraphicsExtractor g, int x, int y, int w, int c) {
+    //? } else {
+    /*private void hline(GuiGraphics g, int x, int y, int w, int c) {*/
+    //? }
         if (w > 0) g.fill(x, y, x + w, y + 1, c);
     }
 

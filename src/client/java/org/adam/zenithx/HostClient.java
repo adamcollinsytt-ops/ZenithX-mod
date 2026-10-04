@@ -1,8 +1,11 @@
 package org.adam.zenithx;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -18,28 +21,70 @@ public class HostClient extends WebSocketClient {
     private static final Gson   GSON = new Gson();
     private static HostClient   instance;
 
-    private static final String[] SERVERS = {
-            "ws://93.115.101.182:9373"
-    };
+    private static String[] getServers() {
+        return Servers.LIST;
+    }
 
     private static final String UPDATE_DOWNLOAD_URL =
-            "https://www.curseforge.com/minecraft/mc-mods/zenithx";
+            "https://zenithx.42web.io/ZenithX.jar";
     private static final String VERSION_CHECK_URL =
             "https://gist.githubusercontent.com/adamcollinsytt-ops/33062d3149ffb8381b86f7b73935a605/raw/zenithx-version.json";
 
-    public static final String MOD_VERSION = "1.0.1";
+    public static final String MOD_VERSION = "1.0.2";
+    public static String       SERVER_VERSION = "1.0.2";
 
-    private static int     currentIndex  = 0;
-    static         String  lastLoginUsername;
-    private static boolean retrying      = false;
+    private static volatile int currentIndex  = 0;
+    public  static             String   lastLoginUsername;
+    private static volatile boolean retrying      = false;
     private static volatile boolean wasConnected = false;
     private final  Minecraft minecraft = Minecraft.getInstance();
 
-    public static String         SERVER_VERSION  = "1.0.1";
-    public static UpdateCallback updateCallback  = null;
+    private boolean isLoggedIn = false; // added by adam for fixed duplicate logins
+    private volatile boolean lowTraffic = false; // added by adam for fixed bypass timer (4 more bugs)
+
+    private static final long BUSY_COOLDOWN_MS = 60_000;
+    private static final Map<String, Long> BUSY_UNTIL = new ConcurrentHashMap<>();
+    private volatile boolean busy = false;
+
+    private static String lastFailReason = null;
     public static volatile boolean UI_BLOCKED    = false;
     public static volatile boolean FORCE_TITLE   = false;
     public static volatile boolean USER_DISMISSED = false;
+
+    private volatile boolean manualClose = false;
+
+    public static void setLastFailReason(String reason) {
+        lastFailReason = reason;
+    }
+
+    public static String getLastFailReason() {
+        return lastFailReason;
+    }
+
+    private static void showConnectionWarning(Runnable onContinue, Runnable onRetry) {
+        Minecraft.getInstance().execute(() -> {
+            Minecraft mc = Minecraft.getInstance();
+
+            if (mc.player != null) {
+                org.adam.zenithx.ui.notification.NotificationManager.show(
+                        new org.adam.zenithx.ui.notification.Notification(
+                                "ZenithX",
+                                "Connection to ZenithX Network lost - retrying in the background...",
+                                5f, false,
+                                "connection_lost_ingame",
+                                () -> true,
+                                null, null, null, null
+                        )
+                );
+                if (onRetry != null) onRetry.run();
+                return;
+            }
+
+            if (!(mc.screen instanceof NoConnectionWarningScreen)) {
+                mc.setScreen(new NoConnectionWarningScreen(onContinue, onRetry, getLastFailReason()));
+            }
+        });
+    }
 
     private HostClient(URI uri) {
         super(uri);
@@ -51,12 +96,13 @@ public class HostClient extends WebSocketClient {
 
     public void startPingLoop() {
         if (pingTimer != null) pingTimer.cancel();
-        pingTimer = new Timer("zenithx-ping", true);
+        long period = lowTraffic ? 45000 : 15000;
+        pingTimer = new Timer(lowTraffic ? "zenithx-ping-slow" : "zenithx-ping", true);
         pingTimer.scheduleAtFixedRate(new TimerTask() {
             @Override public void run() {
                 if (isOpen()) sendPing();
             }
-        }, 5000, 15000);
+        }, 5000, period);
     }
 
     public void stopPingLoop() {
@@ -68,9 +114,12 @@ public class HostClient extends WebSocketClient {
     Runnable onDisconnect;
 
     public static synchronized HostClient getInstance() {
-        if (instance == null || instance.isClosed()) {
+        String[] servers = getServers();
+        String target = servers[Math.min(currentIndex, servers.length - 1)];
+        if (instance == null || instance.isClosed()
+                || (!instance.isOpen() && !instance.getURI().toString().equals(target))) {
             try {
-                instance = new HostClient(new URI(SERVERS[currentIndex]));
+                instance = new HostClient(new URI(target));
             } catch (Exception e) {
                 System.err.println("[ZenithX] Init failed: " + e.getMessage());
             }
@@ -96,12 +145,12 @@ public class HostClient extends WebSocketClient {
     }
 
     public void setMessageHandler(Consumer<JsonObject> h) { this.handler = h; }
-    public void setOnConnect(Runnable r)                  { this.onConnect = r; }
-    public void setOnDisconnect(Runnable r)               { this.onDisconnect = r; }
+    public void setOnConnect(Runnable r)               { this.onConnect = r; }
+    public void setOnDisconnect(Runnable r)              { this.onDisconnect = r; }
 
     public static String getServerVersion() { return SERVER_VERSION; }
 
-    private static Timer  updateTimer           = null;
+    private static Timer   updateTimer           = null;
     private static String lastNotifiedVersion   = null;
 
     public static void startUpdateChecker() {
@@ -120,24 +169,28 @@ public class HostClient extends WebSocketClient {
                 java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(5000);
-                conn.setRequestProperty("User-Agent",     "ZenithX-Mod");
+                conn.setRequestProperty("User-Agent",    "ZenithX-Mod");
                 conn.setRequestProperty("Cache-Control",  "no-cache");
                 conn.setRequestProperty("Pragma",         "no-cache");
 
                 String     json    = new String(conn.getInputStream().readAllBytes());
                 JsonObject obj     = new Gson().fromJson(json, JsonObject.class);
+
                 String     latest  = obj.get("version").getAsString().trim();
+
+                if (obj.has("server_version")) {
+                    SERVER_VERSION = obj.get("server_version").getAsString().trim();
+                }
+
                 String     current = MOD_VERSION.trim();
 
-                System.out.println("[ZenithX] current=" + current + " | latest=" + latest);
+                System.out.println("[ZenithX] current=" + current + " | latest=" + latest + " | server_version=" + SERVER_VERSION);
 
-                if (latest.equals(current))              return;
+                if (latest.equals(current))             return;
                 if (latest.equals(lastNotifiedVersion))  return;
                 lastNotifiedVersion = latest;
 
-                final String finalUrl = obj.has("download")
-                        ? obj.get("download").getAsString().trim()
-                        : UPDATE_DOWNLOAD_URL;
+                final String finalUrl = UPDATE_DOWNLOAD_URL;
 
                 new Thread(() -> {
                     try {
@@ -176,16 +229,124 @@ public class HostClient extends WebSocketClient {
         }, "zenithx-update-check").start();
     }
 
+    private synchronized void sendLoginPacket(String username) {
+        if (isLoggedIn) return;
+        isLoggedIn = true;
+
+        JsonObject o = new JsonObject();
+        o.addProperty("type",     "LOGIN");
+        o.addProperty("username", username);
+        o.addProperty("version", MOD_VERSION);
+        o.addProperty("server_version", SERVER_VERSION);
+        send(GSON.toJson(o));
+    }
+
+    private static boolean isBusy(String uri) {
+        Long until = BUSY_UNTIL.get(uri);
+        if (until == null) return false;
+        if (System.currentTimeMillis() >= until) {
+            BUSY_UNTIL.remove(uri);
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean allBusy(String[] servers) {
+        for (String s : servers) if (!isBusy(s)) return false;
+        return true;
+    }
+
+    private static void copyCallbacks(HostClient from, HostClient to) {
+        if (from == null) return;
+        if (from.handler      != null) to.handler      = from.handler;
+        if (from.onConnect    != null) to.onConnect    = from.onConnect;
+        if (from.onDisconnect != null) to.onDisconnect = from.onDisconnect;
+    }
+
+    private void markBusyAndFailover() {
+        if (busy) return;
+        busy = true;
+
+        BUSY_UNTIL.put(getURI().toString(), System.currentTimeMillis() + BUSY_COOLDOWN_MS);
+        System.out.println("[ZenithX] Server busy, skipping for "
+                + (BUSY_COOLDOWN_MS / 1000) + "s: " + getURI());
+
+        setLastFailReason("server_busy");
+        retrying     = false;
+        wasConnected = false;
+        manualClose  = true;
+        try { if (!isClosed()) close(); } catch (Exception ignored) {}
+
+        startBusyFailover();
+    }
+
+    private static void startBusyFailover() {
+        new Thread(() -> {
+            try {
+                final String[] servers = getServers();
+                final int firstBackup  = Servers.firstBackupIndex();
+                final HostClient old;
+                synchronized (HostClient.class) { old = instance; }
+
+                for (int i = 0; i < servers.length; i++) {
+                    if (isBusy(servers[i])) continue;
+
+                    HostClient candidate = new HostClient(new URI(servers[i]));
+                    candidate.manualClose = true;
+                    copyCallbacks(old, candidate);
+
+                    synchronized (HostClient.class) {
+                        currentIndex = i;
+                        instance = candidate;
+                    }
+
+                    System.out.println("[ZenithX] Busy-failover trying: " + servers[i]);
+
+                    if (candidate.connectBlocking(6, TimeUnit.SECONDS)
+                            && candidate.isOpen() && !candidate.busy) {
+                        candidate.manualClose = false;
+                        wasConnected   = true;
+                        lastFailReason = null;
+                        if (i >= firstBackup) candidate.applyLowTrafficMode();
+                        return;
+                    }
+
+                    if (candidate.busy) return;
+
+                    candidate.manualClose = true;
+                    try { candidate.close(); } catch (Exception ignored) {}
+                }
+
+                setLastFailReason("server_busy");
+                showConnectionWarning(
+                    () -> {},
+                    () -> {
+                        BUSY_UNTIL.clear();
+                        retrying = false;
+                        startReconnectLoop();
+                    }
+                );
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                System.err.println("[ZenithX] Busy failover error: " + e);
+            }
+        }, "zenithx-busy-failover").start();
+    }
+
     @Override
     public void onOpen(ServerHandshake h) {
         wasConnected = true;
-        System.out.println("[ZenithX] Connected to: " + SERVERS[currentIndex]);
+        isLoggedIn = false;
+        String playerName = getCurrentPlayerName();
+        if (DevelopmentShared.isDev(playerName)) {
+            System.out.println("[ZenithX] Connected to: " + getURI());
+        } 
+
         if (lastLoginUsername != null) {
-            JsonObject o = new JsonObject();
-            o.addProperty("type",     "LOGIN");
-            o.addProperty("username", lastLoginUsername);
-            send(GSON.toJson(o));
+            sendLoginPacket(lastLoginUsername);
         }
+
         Minecraft.getInstance().execute(() -> {
             if (Minecraft.getInstance().screen instanceof NoConnectionWarningScreen) {
                 Minecraft.getInstance().setScreen(null);
@@ -198,8 +359,64 @@ public class HostClient extends WebSocketClient {
     public void onMessage(String raw) {
         try {
             JsonObject json = GSON.fromJson(raw, JsonObject.class);
+
+            if (json.has("type")) {
+                String type = json.get("type").getAsString();
+
+                if ("LOGIN_FAIL".equals(type)) {
+                    String reason = json.has("reason") ? json.get("reason").getAsString() : "connection_lost";
+
+                    if ("server_busy".equals(reason)) {
+                        markBusyAndFailover();
+                        return;
+                    }
+
+                    setLastFailReason(reason);
+
+                    retrying = false;
+                    wasConnected = false;
+                    manualClose = true;
+
+                    try {
+                        close();
+                    } catch (Exception ignored) {}
+
+                    if ("outdated_version".equals(reason)) {
+                        return;
+                    }
+
+                    showConnectionWarning(
+                        () -> {},
+                        () -> {
+                            retrying = false;
+                            startReconnectLoop();
+                        }
+                    );
+                    return;
+                }
+            }
+
+            if (json.has("type") && "FRIEND_REQUEST".equals(json.get("type").getAsString())) {
+                if (json.has("from")) {
+                    String fromPlayer = json.get("from").getAsString();
+
+                    java.util.UUID playerUuid = java.util.UUID.randomUUID();
+
+                    Minecraft.getInstance().execute(() ->
+                        org.adam.zenithx.ui.FriendRequestNotification.show(
+                            fromPlayer,
+                            playerUuid,
+                            () -> acceptFriend(fromPlayer),
+                            () -> System.out.println("[ZenithX] Friend request from " + fromPlayer + " rejected")
+                        )
+                    );
+                }
+            }
+
             if (handler != null) handler.accept(json);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            System.err.println("[ZenithX] onMessage failed: " + e);
+        }
     }
 
     @Override
@@ -211,12 +428,29 @@ public class HostClient extends WebSocketClient {
 
     @Override
     public void onError(Exception ex) {
-        System.err.println("[ZenithX] WS error: " + ex.getMessage());
+        System.err.println("[ZenithX] WebSocket Error occurred! Connection failed or dropped.");
+        System.err.println("[ZenithX] Error Type: " + ex.getClass().getName());
+        System.err.println("[ZenithX] Error Message: " + ex.getMessage());
+        ex.printStackTrace();
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
+        isLoggedIn = false;
         if (onDisconnect != null) onDisconnect.run();
+        if (manualClose) return;
+
+        if (code == 1013) {
+            markBusyAndFailover();
+            return;
+        }
+
+        if ("outdated_version".equals(lastFailReason)) {
+            retrying = false;
+            wasConnected = false;
+            return;
+        }
+
         if (retrying) return;
         if (wasConnected) {
             wasConnected = false;
@@ -228,14 +462,24 @@ public class HostClient extends WebSocketClient {
 
     private static void switchServer() {
         wasConnected = false;
-        currentIndex = (currentIndex + 1) % SERVERS.length;
+        currentIndex++;
+        if (currentIndex >= getServers().length) {
+            currentIndex = 0;
+            setLastFailReason("connection_lost");
+            showConnectionWarning(
+                () -> {},
+                () -> startReconnectLoop()
+            );
+            return;
+        }
+
         new Thread(() -> {
             try {
                 Consumer<JsonObject> oldHandler     = instance != null ? instance.handler     : null;
                 Runnable             oldOnConnect   = instance != null ? instance.onConnect   : null;
                 Runnable             oldOnDisconnect= instance != null ? instance.onDisconnect: null;
 
-                HostClient fresh = new HostClient(new URI(SERVERS[currentIndex]));
+                HostClient fresh = new HostClient(new URI(getServers()[currentIndex]));
                 if (oldHandler      != null) fresh.handler      = oldHandler;
                 if (oldOnConnect    != null) fresh.onConnect    = oldOnConnect;
                 if (oldOnDisconnect != null) fresh.onDisconnect = oldOnDisconnect;
@@ -249,74 +493,193 @@ public class HostClient extends WebSocketClient {
     }
 
     public static synchronized boolean connectToAnyServer() {
+        if (instance != null && instance.isOpen()) {
+            return true;
+        }
+
         Consumer<JsonObject> oldHandler      = instance != null ? instance.handler      : null;
         Runnable             oldOnConnect    = instance != null ? instance.onConnect    : null;
         Runnable             oldOnDisconnect = instance != null ? instance.onDisconnect : null;
 
-        for (int i = 0; i < SERVERS.length; i++) {
-            currentIndex = i;
+        String[] servers = getServers();
+
+        String playerName = getCurrentPlayerName();
+        /*if (playerName != null) { // edit by xekek from make it like players default!
+            if (DevelopmentShared.isDev(playerName)) {
+                int backupStart = Servers.firstBackupIndex();
+                if (backupStart < servers.length) {
+                    servers = java.util.Arrays.copyOfRange(servers, backupStart, servers.length);
+                }
+            }
+        }*/
+
+        for (int i = 0; i < servers.length; i++) {
+            if (isBusy(servers[i])) continue;
+
+            HostClient test = null;
             try {
-                HostClient test = new HostClient(new URI(SERVERS[i]));
+                test = new HostClient(new URI(servers[i]));
+                test.manualClose = true;
                 if (oldHandler      != null) test.handler      = oldHandler;
                 if (oldOnConnect    != null) test.onConnect    = oldOnConnect;
                 if (oldOnDisconnect != null) test.onDisconnect = oldOnDisconnect;
 
-                System.out.println("[ZenithX] Trying: " + SERVERS[i]);
-                test.connect();
-                instance     = test;
-                wasConnected = false;
-                return true;
+                currentIndex = i;
+                instance = test;
+
+                System.out.println("[ZenithX] Trying: " + servers[i]);
+
+                if (test.connectBlocking(6, TimeUnit.SECONDS) && test.isOpen()) {
+                    if (test.busy) return false;
+                    test.manualClose = false;
+                    wasConnected = true;
+                    lastFailReason = null;
+                    return true;
+                }
+
+                System.err.println("[ZenithX] Timeout/failed: " + servers[i]);
+                test.close();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                if (test != null) test.close();
+                break;
             } catch (Exception e) {
-                System.err.println("[ZenithX] Failed: " + SERVERS[i]);
+                System.err.println("[ZenithX] Failed: " + servers[i] + " -> " + e);
+                if (test != null) test.close();
             }
         }
+
+        setLastFailReason("connection_lost");
+        wasConnected = false;
         return false;
     }
 
+    private static String getCurrentPlayerName() {
+        try {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc != null && mc.getUser() != null) {
+                return mc.getUser().getName();
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
     public static void startReconnectLoop() {
+        if ("outdated_version".equals(lastFailReason)) {
+            return;
+        }
         if (retrying) return;
         retrying = true;
         new Thread(() -> {
+            Servers.fetchServers();
+            final String[] servers = getServers();
+            final int totalServers = servers.length;
             int serverCycle = 0;
+
             while (retrying) {
                 try {
                     Thread.sleep(serverCycle == 0 ? 3000 : 10000);
 
                     if (instance != null && instance.isOpen()) {
                         retrying = false;
+                        Minecraft.getInstance().execute(() -> {
+                            if (Minecraft.getInstance().screen instanceof NoConnectionWarningScreen) {
+                                Minecraft.getInstance().setScreen(null);
+                            }
+                        });
                         return;
                     }
 
-                    currentIndex = serverCycle % SERVERS.length;
+                    if (serverCycle >= totalServers * 2) {
+                        retrying = false;
+                        setLastFailReason(lastFailReason != null ? lastFailReason : "connection_lost");
+                        showConnectionWarning(
+                            () -> {},
+                            () -> { retrying = false; startReconnectLoop(); }
+                        );
+                        return;
+                    }
+
+                    boolean lowTrafficPass = (serverCycle >= totalServers);
+                    if (lowTrafficPass) {
+                        int backups = Math.max(1, Math.min(Servers.backupCount(), totalServers));
+                        int firstBackup = totalServers - backups;
+                        currentIndex = firstBackup + ((serverCycle - totalServers) % backups);
+
+                        if (serverCycle == totalServers) {
+                            Minecraft.getInstance().execute(() ->
+                                org.adam.zenithx.ui.notification.NotificationManager.show(
+                                    new org.adam.zenithx.ui.notification.Notification(
+                                        "ZenithX - High Traffic",
+                                        "Servers are busy. Switching to backup servers (Low-Traffic Mode).",
+                                        8f, false,
+                                        "high_traffic_warning",
+                                        () -> true,
+                                        null, null, null, null,
+                                        null, null
+                                    )
+                                )
+                            );
+                        }
+                    } else {
+                        currentIndex = serverCycle % totalServers;
+                    }
+
+                    if (isBusy(servers[currentIndex]) && !allBusy(servers)) {
+                        System.out.println("[ZenithX] Skipping busy server: " + servers[currentIndex]);
+                        serverCycle++;
+                        continue;
+                    }
+
                     serverCycle++;
 
                     Consumer<JsonObject> oldHandler      = instance != null ? instance.handler      : null;
                     Runnable             oldOnConnect    = instance != null ? instance.onConnect    : null;
                     Runnable             oldOnDisconnect = instance != null ? instance.onDisconnect : null;
 
-                    HostClient fresh = new HostClient(new URI(SERVERS[currentIndex]));
+                    HostClient fresh = new HostClient(new URI(servers[currentIndex]));
                     if (oldHandler      != null) fresh.handler      = oldHandler;
                     if (oldOnConnect    != null) fresh.onConnect    = oldOnConnect;
                     if (oldOnDisconnect != null) fresh.onDisconnect = oldOnDisconnect;
 
                     synchronized (HostClient.class) { instance = fresh; }
 
+                    System.out.println("[ZenithX] Reconnect trying: " + servers[currentIndex]);
                     fresh.connect();
 
                     int wait = 0;
-                    while (wait++ < 20 && !fresh.isOpen() && !fresh.isClosed()) {
+                    while (wait++ < 30 && !fresh.isOpen() && !fresh.isClosed()) {
                         Thread.sleep(250);
                     }
 
                     if (fresh.isOpen()) {
                         wasConnected = true;
                         retrying     = false;
+
+                        if (lowTrafficPass) {
+                            fresh.applyLowTrafficMode();
+                        }
                         return;
                     }
 
-                } catch (Exception ignored) {}
+                    fresh.manualClose = true;
+                    try { fresh.close(); } catch (Exception ignored) {}
+
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    retrying = false;
+                    return;
+                } catch (Exception e) {
+                    System.err.println("[ZenithX] Reconnect loop error: " + e);
+                }
             }
         }, "zenithx-reconnect").start();
+    }
+
+    public void applyLowTrafficMode() {
+        System.out.println("[ZenithX] Low-Traffic / Slow-Mode activated to reduce server load.");
+        lowTraffic = true;
+        startPingLoop();
     }
 
     public static void tryReconnectNow() {
@@ -328,16 +691,14 @@ public class HostClient extends WebSocketClient {
     }
 
     public void sendRaw(byte[] data) {
-        if (isOpen()) this.send(data);
+        if (!isOpen() || data == null) return;
+        send(data);
     }
 
     public void login(String username) {
         lastLoginUsername = username;
         if (isOpen()) {
-            JsonObject o = new JsonObject();
-            o.addProperty("type",     "LOGIN");
-            o.addProperty("username", username);
-            sendJson(o);
+            sendLoginPacket(username);
         }
     }
 
@@ -357,7 +718,7 @@ public class HostClient extends WebSocketClient {
 
     public void removeFriend(String username) {
         JsonObject o = new JsonObject();
-        o.addProperty("type",     "FRIEND_REMOVE");
+        o.addProperty("type",    "FRIEND_REMOVE");
         o.addProperty("username", username);
         sendJson(o);
     }

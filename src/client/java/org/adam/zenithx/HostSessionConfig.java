@@ -3,12 +3,18 @@ package org.adam.zenithx;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class HostSessionConfig {
 
     private static GameType gameMode = GameType.SURVIVAL;
     private static Difficulty difficulty = Difficulty.NORMAL;
     private static boolean cheats = false;
     private static boolean shareRP = false;
+    private static volatile boolean pendingApply = false;
+    private static int maxPlayers = 4;
+    private static List<String> activeResourcePacks = new ArrayList<>();
 
     public static void setGameMode(GameType gm) {
         gameMode = gm;
@@ -41,4 +47,24 @@ public class HostSessionConfig {
     public static boolean isShareRP() {
         return shareRP;
     }
+
+    public static void setMaxPlayers(int count) {
+        maxPlayers = count;
+    }
+
+    public static int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public static void setActiveResourcePacks(List<String> packs) {
+        activeResourcePacks = packs;
+    }
+
+    public static List<String> getActiveResourcePacks() {
+        return activeResourcePacks;
+    }
+
+    public static void markPendingApply()  { pendingApply = true; }
+    public static boolean hasPendingApply() { return pendingApply; }
+    public static void clearPendingApply()  { pendingApply = false; }
 }

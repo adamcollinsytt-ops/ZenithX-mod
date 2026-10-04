@@ -2,95 +2,94 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ZenithX Wiki</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 :root{
-  --bg:#1A1A1A;--bg2:#212121;--bg3:#1E1E1E;--bg4:#252525;
-  --border:#3A3A3A;--sect:#484848;
-  --text:#D4D0C8;--dim:#888888;--white:#FFFFFF;
-  --blue:#274673;--blue2:#3073D4;--blue-hl:#3A6AA8;
-  --blue-out:#000400;--green:#226132;--green2:#2D7941;
-  --row-hov:#2A2A2A;--rowline:#222222;--srchbg:#111111;
-  --sidebar-w:230px;
+  --bg:#0C0F12;--bg2:#12161A;--bg3:#171C21;--bg4:#1D2329;
+  --border:#242B31;--border-hi:#323B42;
+  --text:#B9C4C8;--dim:#67757C;--white:#EEF3F3;
+  --cyan:#4FD8C4;--cyan-dim:#2A6E63;
+  --amber:#E3A94E;--red:#E0677B;--green:#5FCB86;
+  --mono:'IBM Plex Mono',monospace;--disp:'Rajdhani',sans-serif;
+  --sidebar-w:236px;
+  padding-top:env(safe-area-inset-top,0);
 }
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;line-height:1.7}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13.5px;line-height:1.7;background-image:radial-gradient(circle at 85% 0%,rgba(79,216,196,.05),transparent 45%)}
 
 /* NAV */
 nav{
   position:fixed;top:0;left:0;right:0;z-index:200;
-  height:50px;background:rgba(26,26,26,.97);
+  height:54px;background:rgba(12,15,18,.92);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 28px;backdrop-filter:blur(8px);
+  padding:0 22px;backdrop-filter:blur(10px);
+  padding-top:env(safe-area-inset-top,0);
 }
-.nav-logo{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--white);text-decoration:none;letter-spacing:2px}
-.nav-logo span{color:var(--blue2)}
+.nav-left{display:flex;align-items:center;gap:14px}
+.burger{display:none;width:30px;height:30px;border:1px solid var(--border);background:var(--bg3);align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:16px}
+.nav-logo{font-family:var(--disp);font-size:21px;font-weight:700;color:var(--white);text-decoration:none;letter-spacing:1.5px}
+.nav-logo span{color:var(--cyan)}
 .nav-links{display:flex;gap:2px;list-style:none}
 .nav-links a{
   color:var(--dim);text-decoration:none;
-  font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;
+  font-family:var(--disp);font-size:12px;font-weight:600;
   letter-spacing:1px;text-transform:uppercase;
-  padding:5px 10px;border:1px solid transparent;
+  padding:6px 12px;border:1px solid transparent;
   transition:color .15s,border-color .15s;
 }
 .nav-links a:hover{color:var(--text);border-color:var(--border)}
-.nav-links a.active{color:var(--blue2);border-color:var(--border)}
+.nav-links a.active{color:var(--cyan);border-color:var(--border-hi)}
+.relay-status{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--dim);letter-spacing:.5px}
+.relay-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.relay-dot{animation:none}}
 
 /* LAYOUT */
-.layout{display:flex;min-height:100vh;padding-top:50px}
+.layout{display:flex;min-height:100%;padding-top:54px}
+.scrim{display:none;position:fixed;inset:54px 0 0 0;background:rgba(0,0,0,.55);z-index:150}
 
 /* SIDEBAR */
 .sidebar{
   width:var(--sidebar-w);flex-shrink:0;
-  position:fixed;top:50px;left:0;bottom:0;
+  position:fixed;top:54px;left:0;bottom:0;
   overflow-y:auto;
   background:var(--bg2);border-right:1px solid var(--border);
-  padding:20px 0;
+  padding:22px 0;z-index:160;
+  transition:transform .22s ease;
 }
 .sidebar::-webkit-scrollbar{width:3px}
-.sidebar::-webkit-scrollbar-thumb{background:var(--border)}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border-hi)}
 
-.sb-sec{margin-bottom:6px}
+.sb-sec{margin-bottom:8px}
 .sb-sec-title{
-  font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;
-  letter-spacing:3px;text-transform:uppercase;color:var(--blue2);
-  padding:8px 18px 4px;
+  font-family:var(--disp);font-size:10.5px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--cyan-dim);
+  padding:9px 20px 5px;
 }
 .sb-link{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 18px;
-  color:var(--dim);text-decoration:none;font-size:12px;
+  display:flex;align-items:center;gap:9px;
+  padding:8px 20px;
+  color:var(--dim);text-decoration:none;font-size:12.5px;
   border-left:2px solid transparent;
   transition:background .12s,color .12s,border-color .12s;
   cursor:pointer;
 }
-.sb-link:hover{background:rgba(48,115,212,.06);color:var(--text)}
-.sb-link.active{color:var(--blue2);border-left-color:var(--blue2);background:rgba(48,115,212,.08)}
-.sb-link .ico{font-size:12px;opacity:.7}
+.sb-link:hover{background:rgba(79,216,196,.05);color:var(--text)}
+.sb-link.active{color:var(--cyan);border-left-color:var(--cyan);background:rgba(79,216,196,.07)}
+.sb-link .ico{font-size:12px;opacity:.65}
 
-.sb-link.announcement{
-  color:#f1c40f;
-  border-left-color:#f1c40f;
-}
-
-.sb-link.announcement:hover{
-  background:rgba(241,196,15,.08);
-  color:#f1c40f;
-}
-
-.sb-link.announcement .ico{
-  color:#f1c40f;
-  opacity:1;
-}
+.sb-link.announcement{color:var(--amber);border-left-color:var(--amber)}
+.sb-link.announcement:hover{background:rgba(227,169,78,.08);color:var(--amber)}
 
 /* MAIN */
 .main{
-  margin-left:var(--sidebar-w);flex:1;
-  max-width:820px;padding:48px 44px 80px;
+  margin-left:var(--sidebar-w);flex:1;min-width:0;
+  max-width:840px;padding:52px 44px 90px;
+  padding-bottom:calc(90px + env(safe-area-inset-bottom,0));
 }
 
 /* PAGES */
@@ -98,127 +97,97 @@ nav{
 .wiki-page.active{display:block}
 
 /* HEADER */
-.wiki-header{
-  padding-bottom:24px;border-bottom:1px solid var(--border);margin-bottom:32px;
-}
+.wiki-header{padding-bottom:26px;border-bottom:1px solid var(--border);margin-bottom:34px}
 .wiki-tag{
   display:inline-block;
-  background:var(--srchbg);border:1px solid var(--border);
-  color:var(--dim);font-size:10px;letter-spacing:3px;text-transform:uppercase;
-  padding:3px 10px;margin-bottom:12px;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--dim);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+  padding:4px 10px;margin-bottom:13px;
 }
-.wiki-title{
-  font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;
-  color:var(--white);line-height:1.0;margin-bottom:10px;
+.wiki-title{font-family:var(--disp);font-size:40px;font-weight:700;color:var(--white);line-height:1.02;margin-bottom:10px}
+.wiki-desc{color:var(--dim);font-size:13px;max-width:70ch}
+
+/* HERO (intro only) */
+.hero-relay{
+  border:1px solid var(--border);background:var(--bg2);
+  padding:22px 24px;margin-bottom:30px;
+  display:flex;align-items:center;gap:22px;
 }
-.wiki-desc{color:var(--dim);font-size:13px}
+.hero-relay svg{flex-shrink:0}
+.hero-relay-text{font-size:12.5px;color:var(--dim);line-height:1.65}
+.hero-relay-text strong{color:var(--white);font-family:var(--disp);font-size:14px;font-weight:600;display:block;margin-bottom:5px}
 
 /* CONTENT */
-h2{
-  font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
-  color:var(--white);margin:36px 0 12px;
-  padding-bottom:8px;border-bottom:1px solid var(--border);
-}
-h3{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:600;color:var(--text);margin:22px 0 8px}
+h2{font-family:var(--disp);font-size:21px;font-weight:700;color:var(--white);margin:38px 0 13px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h3{font-family:var(--disp);font-size:15.5px;font-weight:600;color:var(--text);margin:22px 0 8px}
 p{margin-bottom:12px;color:var(--text)}
 ul,ol{padding-left:20px;margin-bottom:12px}
-li{margin-bottom:5px;color:var(--text)}
-a{color:var(--blue2);text-decoration:none}
+li{margin-bottom:6px;color:var(--text)}
+a{color:var(--cyan);text-decoration:none}
 a:hover{text-decoration:underline}
-
-code{
-  background:var(--bg4);border:1px solid var(--border);
-  padding:1px 6px;font-size:11px;color:var(--blue2);
-  font-family:'Share Tech Mono',monospace;
-}
+code{background:var(--bg4);border:1px solid var(--border);padding:1px 6px;font-size:11.5px;color:var(--cyan)}
 
 /* INFO BOXES */
-.box{
-  padding:14px 16px;margin:16px 0;font-size:12px;
-  border-left:2px solid;border-top:1px solid;border-right:1px solid;border-bottom:1px solid;
-}
+.box{padding:14px 16px;margin:18px 0;font-size:12px;border-left:2px solid;border-top:1px solid;border-right:1px solid;border-bottom:1px solid}
 .box strong{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
 .box p{margin:0;color:inherit}
-.box.tip{background:rgba(48,115,212,.07);border-color:var(--blue2);color:var(--text)}
-.box.tip strong{color:var(--blue2)}
-.box.note{background:rgba(200,160,60,.07);border-color:#C8A03C;color:#C8A03C}
-.box.safe{background:rgba(85,170,85,.07);border-color:#55AA55;color:#55AA55}
+.box.tip{background:rgba(79,216,196,.06);border-color:var(--cyan);color:var(--text)}
+.box.tip strong{color:var(--cyan)}
+.box.note{background:rgba(227,169,78,.06);border-color:var(--amber);color:var(--amber)}
+.box.safe{background:rgba(95,203,134,.06);border-color:var(--green);color:var(--green)}
 
 /* BUTTON DOCS */
-.btn-doc{
-  display:flex;align-items:flex-start;gap:16px;
-  padding:16px;background:var(--bg3);
-  border:1px solid var(--border);margin-bottom:2px;
-  transition:border-color .2s;
-}
-.btn-doc:hover{border-color:var(--blue2)}
-.btn-visual{
-  flex-shrink:0;min-width:80px;
-  padding:7px 12px;
-  font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;
-  text-align:center;letter-spacing:.5px;
-  position:relative;
-}
-/* replicate MenuButton styles exactly */
-.btn-visual.blue{
-  background:#274673;color:#fff;
-  box-shadow:inset 1px 0 0 #3A6AA8,inset 0 1px 0 #3A6AA8,
-             inset -1px 0 0 rgba(0,4,0,.5),inset 0 -1px 0 rgba(0,4,0,.5);
-}
-.btn-visual.green{
-  background:#226132;color:#fff;
-  box-shadow:inset 1px 0 0 #2E7A40,inset 0 1px 0 #2E7A40,
-             inset -1px 0 0 rgba(0,4,0,.5),inset 0 -1px 0 rgba(0,4,0,.5);
-}
-.btn-visual.gray{
-  background:#383838;color:#fff;
-  box-shadow:inset 1px 0 0 #484848,inset 0 1px 0 #484848,
-             inset -1px 0 0 rgba(0,0,0,.5),inset 0 -1px 0 rgba(0,0,0,.5);
-}
-.btn-visual.red{
-  background:#9F4444;color:#fff;
-  box-shadow:inset 1px 0 0 #C05A5A,inset 0 1px 0 #C05A5A,
-             inset -1px 0 0 rgba(0,0,0,.5),inset 0 -1px 0 rgba(0,0,0,.5);
-}
-.btn-doc-name{font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--white);font-size:14px;margin-bottom:4px}
+.btn-doc{display:flex;align-items:flex-start;gap:16px;padding:16px;background:var(--bg3);border:1px solid var(--border);margin-bottom:2px;transition:border-color .2s}
+.btn-doc:hover{border-color:var(--border-hi)}
+.btn-visual{flex-shrink:0;min-width:84px;padding:7px 12px;font-family:var(--disp);font-size:12px;font-weight:700;text-align:center;letter-spacing:.4px;border:1px solid var(--border-hi)}
+.btn-visual.blue{background:rgba(79,216,196,.1);color:var(--cyan);border-color:var(--cyan-dim)}
+.btn-visual.green{background:rgba(95,203,134,.1);color:var(--green);border-color:#2E6B44}
+.btn-visual.gray{background:var(--bg4);color:var(--text)}
+.btn-visual.red{background:rgba(224,103,123,.1);color:var(--red);border-color:#7A3540}
+.btn-doc-name{font-family:var(--disp);font-weight:700;color:var(--white);font-size:14px;margin-bottom:4px}
 .btn-doc-desc{color:var(--dim);font-size:12px;margin:0}
 
 /* STEPS */
-.steps{margin:16px 0}
+.steps{margin:18px 0}
 .step{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
-.step-n{
-  width:24px;height:24px;flex-shrink:0;
-  background:var(--blue2);
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:#fff;
-  margin-top:1px;
-}
-.step-c strong{color:var(--white);display:block;margin-bottom:3px;font-size:13px}
+.step-n{width:24px;height:24px;flex-shrink:0;background:var(--cyan-dim);color:#0C0F12;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:13px;margin-top:1px}
+.step-c strong{color:var(--white);display:block;margin-bottom:3px;font-size:13px;font-family:var(--disp)}
 .step-c p{margin:0;font-size:12px;color:var(--dim)}
 
-/* WIKI FOOTER */
-.wiki-foot{
-  margin-top:56px;padding-top:20px;border-top:1px solid var(--border);
-  color:var(--dim);font-size:11px;
-  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+.wiki-foot{margin-top:58px;padding-top:20px;border-top:1px solid var(--border);color:var(--dim);font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding:36px 22px 70px}
+  .nav-links{display:none}
+  .burger{display:flex}
+  .scrim.open{display:block}
+  .wiki-title{font-size:32px}
+  .hero-relay{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a class="nav-logo" href="index"><span>Zenith</span>X</a>
+  <div class="nav-left">
+    <div class="burger" onclick="toggleSidebar()">☰</div>
+    <a class="nav-logo" href="index"><span>Zenith</span>X</a>
+  </div>
   <ul class="nav-links">
     <li><a href="index">Home</a></li>
     <li><a href="wiki" class="active">Wiki</a></li>
     <li><a href="https://discord.gg/bavsasPB8N" target="_blank">Discord</a></li>
   </ul>
+  <div class="relay-status"><span class="relay-dot"></span>RELAY ONLINE</div>
 </nav>
+
+<div class="scrim" onclick="toggleSidebar()"></div>
 
 <div class="layout">
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sb-sec">
     <div class="sb-sec-title">Getting Started</div>
     <div class="sb-link active" onclick="show('intro',this)"><span class="ico">📖</span>Introduction</div>
@@ -242,21 +211,35 @@ code{
     <div class="sb-link" onclick="show('faq',this)"><span class="ico">❓</span>FAQ</div>
     <div class="sb-link" onclick="show('safety',this)"><span class="ico">🛡️</span>Safety</div>
     <div class="sb-link" onclick="show('changelog',this)"><span class="ico">📜</span>Changelog</div>
-    <div class="sb-link announcement" onclick="show('supported',this)"><span class="ico">⚠️</span> Supported The Mod</div>
-  </div>  
+    <div class="sb-link announcement" onclick="show('supported',this)"><span class="ico">⚠️</span>Supported The Mod</div>
+  </div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
 
-<!-- INTRO -->
 <div class="wiki-page active" id="page-intro">
   <div class="wiki-header">
     <div class="wiki-tag">Getting Started</div>
     <div class="wiki-title">Introduction</div>
     <div class="wiki-desc">Welcome to the ZenithX Wiki.</div>
   </div>
-  <p><strong style="color:var(--white)">ZenithX</strong> is a Fabric mod for Minecraft that lets you host worlds and play with friends — completely free, no server setup required. It works through a secure relay server that connects players directly.</p>
+
+  <div class="hero-relay">
+    <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
+      <circle cx="20" cy="45" r="5" fill="#4FD8C4"/>
+      <circle cx="100" cy="20" r="5" fill="#67757C"/>
+      <circle cx="100" cy="70" r="5" fill="#67757C"/>
+      <circle cx="60" cy="45" r="7" fill="#0C0F12" stroke="#4FD8C4" stroke-width="1.5"/>
+      <line x1="25" y1="45" x2="55" y2="45" stroke="#4FD8C4" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <line x1="65" y1="45" x2="95" y2="20" stroke="#4FD8C4" stroke-width="1.2" stroke-dasharray="3 3"/>
+      <line x1="65" y1="45" x2="95" y2="70" stroke="#4FD8C4" stroke-width="1.2" stroke-dasharray="3 3"/>
+    </svg>
+    <div class="hero-relay-text">
+      <strong>You ↔ Relay ↔ Friends</strong>
+      <strong style="color:var(--white)">ZenithX</strong> is a Fabric mod for Minecraft that lets you host worlds and play with friends — completely free, no server setup required. It works through a secure relay server that connects players directly.
+    </div>
+  </div>
+
   <h2>What can ZenithX do?</h2>
   <ul>
     <li>Host your singleplayer world so friends can join</li>
@@ -266,7 +249,8 @@ code{
     <li>Receive in-game notifications for requests and invites</li>
     <li>Auto-check for mod updates on launch</li>
   </ul>
-  <div class="box tip"><strong>📘 Tip</strong><p>Use the sidebar to navigate all features and UI explanations.</p></div>
+  <div class="box tip"><strong>Tip</strong><p>Use the sidebar to navigate all features and UI explanations.</p></div>
+
   <h2>Requirements</h2>
   <ul>
     <li>Minecraft Java Edition <code>26.1.2</code></li>
@@ -274,15 +258,13 @@ code{
     <li>Fabric API</li>
     <li>An internet connection</li>
   </ul>
+
   <h2>What happens if the Network/Relay is disconnected?</h2>
-  <ul>
-    <li>If the Network or Relay becomes unavailable, the system will automatically switch to P2P connections.</li>
-    <li><h3 style="margin: 0;">What is P2P?</h3></li>
-    <li>P2P (Peer-to-Peer) allows players to connect directly to each other. Players with NAT traversal support can host and invite others to play together.</li>
-  </ul>
+  <p>If the Network or Relay becomes unavailable, the system will automatically switch to P2P connections.</p>
+  <h3>What is P2P?</h3>
+  <p>P2P (Peer-to-Peer) allows players to connect directly to each other. Players with NAT traversal support can host and invite others to play together.</p>
 </div>
 
-<!-- INSTALL -->
 <div class="wiki-page" id="page-install">
   <div class="wiki-header">
     <div class="wiki-tag">Getting Started</div>
@@ -295,10 +277,9 @@ code{
     <div class="step"><div class="step-n">3</div><div class="step-c"><strong>Download ZenithX</strong><p>Get the latest <code>.jar</code> from the <a href="index#download">download page</a>.</p></div></div>
     <div class="step"><div class="step-n">4</div><div class="step-c"><strong>Place in mods folder</strong><p>Put the <code>.jar</code> in your Minecraft <code>mods</code> folder and launch.</p></div></div>
   </div>
-  <div class="box note"><strong>⚠️ Note</strong><p>ZenithX requires an internet connection to connect to the relay server.</p></div>
+  <div class="box note"><strong>Note</strong><p>ZenithX requires an internet connection to connect to the relay server.</p></div>
 </div>
 
-<!-- HOST -->
 <div class="wiki-page" id="page-host">
   <div class="wiki-header">
     <div class="wiki-tag">Features</div>
@@ -315,7 +296,6 @@ code{
   </div>
 </div>
 
-<!-- FRIENDS -->
 <div class="wiki-page" id="page-friends">
   <div class="wiki-header">
     <div class="wiki-tag">Features</div>
@@ -329,16 +309,9 @@ code{
     <div class="step"><div class="step-n">3</div><div class="step-c"><strong>Type username and press ✓ or Enter</strong><p>A friend request is sent. Once they accept, they appear in your list.</p></div></div>
   </div>
   <h2>Online Status</h2>
-  <p>
-    <img src="greendot.png" alt="Online" width="15" height="15">
-    = online.
-
-    <img src="graydot.png" alt="Offline" width="15" height="15">
-    = offline.
-  </p>
+  <p><span style="color:var(--cyan)">●</span> = online &nbsp; <span style="color:var(--dim)">●</span> = offline</p>
 </div>
 
-<!-- INVITES -->
 <div class="wiki-page" id="page-invites">
   <div class="wiki-header">
     <div class="wiki-tag">Features</div>
@@ -349,10 +322,9 @@ code{
   <p>While in a hosted world, open the Friends Screen from the Pause Menu. Click <strong style="color:var(--white)">+</strong> next to any online friend to send them a world invite.</p>
   <h2>Receiving an Invite</h2>
   <p>You'll see a notification in-game. Open Friends Screen → <strong style="color:var(--white)">Invites tab</strong> to accept or decline.</p>
-  <div class="box tip"><strong>📘 Tip</strong><p>The Invites tab shows a badge with the number of pending invitations.</p></div>
+  <div class="box tip"><strong>Tip</strong><p>The Invites tab shows a badge with the number of pending invitations.</p></div>
 </div>
 
-<!-- SETTINGS -->
 <div class="wiki-page" id="page-settings">
   <div class="wiki-header">
     <div class="wiki-tag">Features</div>
@@ -361,63 +333,33 @@ code{
   </div>
   <p>Appears after selecting a world, before the Friends Screen.</p>
   <h2>Options</h2>
-  <div class="btn-doc">
-    <div class="btn-visual gray">Survival ▼</div>
-    <div><div class="btn-doc-name">Game Mode</div><p class="btn-doc-desc">Choose Survival, Creative, Adventure, or Spectator. Sets the default mode for joining players.</p></div>
-  </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">Normal ▼</div>
-    <div><div class="btn-doc-name">Difficulty</div><p class="btn-doc-desc">Set world difficulty: Peaceful, Easy, Normal, or Hard.</p></div>
-  </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">Cheats ●</div>
-    <div><div class="btn-doc-name">Cheats</div><p class="btn-doc-desc">Allow or block commands like /gamemode in the hosted world.</p></div>
-  </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">Share RP ●</div>
-    <div><div class="btn-doc-name">Share RP</div><p class="btn-doc-desc">When enabled, your active resource pack is shared with joining players.</p></div>
-  </div>
+  <div class="btn-doc"><div class="btn-visual gray">Survival ▼</div><div><div class="btn-doc-name">Game Mode</div><p class="btn-doc-desc">Choose Survival, Creative, Adventure, or Spectator. Sets the default mode for joining players.</p></div></div>
+  <div class="btn-doc"><div class="btn-visual gray">Normal ▼</div><div><div class="btn-doc-name">Difficulty</div><p class="btn-doc-desc">Set world difficulty: Peaceful, Easy, Normal, or Hard.</p></div></div>
+  <div class="btn-doc"><div class="btn-visual gray">Cheats ●</div><div><div class="btn-doc-name">Cheats</div><p class="btn-doc-desc">Allow or block commands like /gamemode in the hosted world.</p></div></div>
+  <div class="btn-doc"><div class="btn-visual gray">Share RP ●</div><div><div class="btn-doc-name">Share RP</div><p class="btn-doc-desc">When enabled, your active resource pack is shared with joining players.</p></div></div>
 </div>
 
-<!-- UI TITLE -->
 <div class="wiki-page" id="page-ui-title">
   <div class="wiki-header">
     <div class="wiki-tag">UI Reference</div>
     <div class="wiki-title">Title Screen</div>
     <div class="wiki-desc">Buttons ZenithX adds to the Minecraft title screen.</div>
   </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">🌍 Host World</div>
-    <div><div class="btn-doc-name">Host World</div><p class="btn-doc-desc">Opens the world selection screen so you can choose a world to host.</p></div>
-  </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">Social</div>
-    <div><div class="btn-doc-name">Social</div><p class="btn-doc-desc">Opens the Friends Screen to manage friends, requests, and invites.</p></div>
-  </div>
-  <div class="btn-doc">
-    <div class="btn-visual blue">⬆ Update</div>
-    <div><div class="btn-doc-name">Update (appears when update available)</div><p class="btn-doc-desc">Shows at the top of the screen when a newer version of ZenithX is detected. Click to download.</p></div>
-  </div>
+  <div class="btn-doc"><div class="btn-visual gray">🌍 Host World</div><div><div class="btn-doc-name">Host World</div><p class="btn-doc-desc">Opens the world selection screen so you can choose a world to host.</p></div></div>
+  <div class="btn-doc"><div class="btn-visual gray">Social</div><div><div class="btn-doc-name">Social</div><p class="btn-doc-desc">Opens the Friends Screen to manage friends, requests, and invites.</p></div></div>
+  <div class="btn-doc"><div class="btn-visual blue">⬆ Update</div><div><div class="btn-doc-name">Update (appears when update available)</div><p class="btn-doc-desc">Shows at the top of the screen when a newer version of ZenithX is detected. Click to download.</p></div></div>
 </div>
 
-<!-- UI PAUSE -->
 <div class="wiki-page" id="page-ui-pause">
   <div class="wiki-header">
     <div class="wiki-tag">UI Reference</div>
     <div class="wiki-title">Pause Screen</div>
     <div class="wiki-desc">Buttons added while you are inside a world.</div>
   </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">📩 Invite</div>
-    <div><div class="btn-doc-name">Invite</div><p class="btn-doc-desc">Opens the Friends Screen to invite players while already in a world.</p></div>
-  </div>
-  <div class="btn-doc">
-    <div class="btn-visual gray">Social</div>
-    <div><div class="btn-doc-name">Social</div><p class="btn-doc-desc">Opens the full Friends Screen from inside a world.</p></div>
-  </div>
+  <div class="btn-doc"><div class="btn-visual gray">📩 Invite</div><div><div class="btn-doc-name">Invite</div><p class="btn-doc-desc">Opens the Friends Screen to invite players while already in a world.</p></div></div>
+  <div class="btn-doc"><div class="btn-visual gray">Social</div><div><div class="btn-doc-name">Social</div><p class="btn-doc-desc">Opens the full Friends Screen from inside a world.</p></div></div>
 </div>
 
-<!-- UI FRIENDS -->
 <div class="wiki-page" id="page-ui-friends">
   <div class="wiki-header">
     <div class="wiki-tag">UI Reference</div>
@@ -436,7 +378,6 @@ code{
   <div class="btn-doc"><div class="btn-visual blue">Done</div><div><div class="btn-doc-name">Done</div><p class="btn-doc-desc">Closes the Friends Screen and returns to the previous screen.</p></div></div>
 </div>
 
-<!-- FAQ -->
 <div class="wiki-page" id="page-faq">
   <div class="wiki-header">
     <div class="wiki-tag">Other</div>
@@ -452,20 +393,16 @@ code{
   <h3>Is it free?</h3>
   <p>Yes, completely free.</p>
   <h3>My friend can't connect — what do I do?</h3>
-  <p>
-  Make sure both of you have the same version of ZenithX and an internet connection. Ask in the Discord for help. 
-  <a href="https://discord.gg/bavsasPB8N">Discord</a>
-  </p>
+  <p>Make sure both of you have the same version of ZenithX and an internet connection. Ask in the <a href="https://discord.gg/bavsasPB8N">Discord</a> for help.</p>
 </div>
 
-<!-- SAFETY -->
 <div class="wiki-page" id="page-safety">
   <div class="wiki-header">
     <div class="wiki-tag">Other</div>
     <div class="wiki-title">Safety</div>
     <div class="wiki-desc">ZenithX is 100% safe to use.</div>
   </div>
-  <div class="box safe"><strong>✓ Verified Safe</strong><p>ZenithX contains no malware, viruses, or any malicious code.</p></div>
+  <div class="box safe"><strong>Verified Safe</strong><p>ZenithX contains no malware, viruses, or any malicious code.</p></div>
   <h2>What data does ZenithX use?</h2>
   <p>Only your Minecraft username is transmitted to the relay server so other players can find and connect with you. No passwords, no email, no personal data is ever collected or stored.</p>
   <h2>What does the relay server do?</h2>
@@ -480,15 +417,13 @@ code{
     <div class="wiki-title">Changelog</div>
     <div class="wiki-desc">See what's new in each version.</div>
   </div>
-  <h2>???</h2>
-  <ul>
-      <li>🎉 First Release 🎉</li>
-  </ul>
+  <h2>Unreleased</h2>
+  <ul><li>🎉 First Release 🎉</li></ul>
   <h2>Version 1.0.0</h2>
   <ul>
-      <li>Fixed skins not showing correctly (official skins)</li>
-      <li>Fixed an issue where some users could not connect to the relay</li>
-      <li>Other minor bug fixes and improvements</li>
+    <li>Fixed skins not showing correctly (official skins)</li>
+    <li>Fixed an issue where some users could not connect to the relay</li>
+    <li>Other minor bug fixes and improvements</li>
   </ul>
 </div>
 
@@ -500,7 +435,6 @@ code{
   </div>
   <p>ZenithX is completely free to use, but if you'd like to support development, you can:</p>
   <ul>
-    <!-- <li><a href="https://modrinth.com/mod/zenithx/donate" target="_blank">Donate on Modrinth</a></li> -->
     <li>Share the mod with friends and online</li>
     <li>Leave a positive review on Modrinth</li>
     <li>Join the Discord and give feedback</li>
@@ -523,6 +457,14 @@ function show(id, el){
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
   window.scrollTo(0,0);
+  if(window.innerWidth<=860) toggleSidebar(false);
+}
+function toggleSidebar(force){
+  var sb=document.getElementById('sidebar');
+  var scrim=document.querySelector('.scrim');
+  var open = force!==undefined ? force : !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  scrim.classList.toggle('open', open);
 }
 </script>
 </body>

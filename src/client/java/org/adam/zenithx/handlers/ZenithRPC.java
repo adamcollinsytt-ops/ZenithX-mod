@@ -9,67 +9,92 @@ public class ZenithRPC {
 
     private static final String CLIENT_ID = "1505258118635061368";
     private static boolean running = false;
+    private static boolean rpcSupported = true;
     private static Thread thread;
     private static long SESSION_START = 0;
 
     public static void init() {
+        if (running) return;
+
         try {
-            if (running) return;
-            running = true;
             SESSION_START = System.currentTimeMillis();
 
             DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().build();
             DiscordRPC.discordInitialize(CLIENT_ID, handlers, true);
 
+            running = true;
+
             thread = new Thread(() -> {
-                while (running) {
+                while (running && rpcSupported) {
                     try {
                         DiscordRPC.discordRunCallbacks();
                         update();
-                    } catch (Exception ignored) {}
-                    try { Thread.sleep(5000); } catch (InterruptedException ignored) {}
+                    } catch (Throwable ignored) {}
+
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ignored) {}
                 }
             }, "ZenithX-RPC");
+
             thread.setDaemon(true);
             thread.start();
-        } catch (Exception e) {
-            System.err.println("[ZenithX] Discord RPC init failed: " + e.getMessage());
+
+        } catch (UnsatisfiedLinkError e) {
+            rpcSupported = false;
+            running = false;
+            System.err.println("[ZenithX] Discord RPC disabled (Native library already loaded in another client instance).");
+        } catch (Throwable t) {
+            rpcSupported = false;
+            running = false;
+            System.err.println("[ZenithX] Discord RPC failed to initialize: " + t.getMessage());
         }
     }
 
     public static void update() {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc == null) return;
+        if (!running || !rpcSupported) return;
 
-        String username = mc.getUser().getName();
-        String uuid = mc.getUser().getProfileId().toString().replace("-", "");
-        String faceUrl = "https://mc-heads.net/avatar/" + uuid + "/64";
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc == null || mc.getUser() == null) return;
 
-        String state;
-        if (mc.level != null) {
-            if (mc.getSingleplayerServer() != null) {
-                state = "Singleplayer";
-            } else if (mc.getCurrentServer() != null) {
-                state = "Playing on " + mc.getCurrentServer().name;
+            String username = mc.getUser().getName();
+            String uuid = mc.getUser().getProfileId() != null 
+                    ? mc.getUser().getProfileId().toString().replace("-", "") 
+                    : "";
+            String faceUrl = "https://mc-heads.net/avatar/" + uuid + "/64";
+
+            String state;
+            if (mc.level != null) {
+                if (mc.getSingleplayerServer() != null) {
+                    state = "Singleplayer";
+                } else if (mc.getCurrentServer() != null) {
+                    state = "Playing on " + mc.getCurrentServer().name;
+                } else {
+                    state = "Multiplayer";
+                }
             } else {
-                state = "Multiplayer";
+                state = "Main Menu";
             }
-        } else {
-            state = "Main Menu";
+
+            DiscordRichPresence presence = new DiscordRichPresence.Builder(state)
+                    .setDetails("ZenithX - Minecraft 26.1.2")
+                    .setStartTimestamps(SESSION_START)
+                    .setBigImage("zenithx", "ZenithX Client")
+                    .setSmallImage(faceUrl, username)
+                    .build();
+
+            DiscordRPC.discordUpdatePresence(presence);
+        } catch (Throwable ignored) {
+            // Prevents thread crashes if the game state changes suddenly
         }
-
-        DiscordRichPresence presence = new DiscordRichPresence.Builder(state)
-                .setDetails("ZenithX - Minecraft 26.1.2")
-                .setStartTimestamps(SESSION_START)
-                .setBigImage("zenithx", "ZenithX Client")
-                .setSmallImage(faceUrl, username)
-                .build();
-
-        DiscordRPC.discordUpdatePresence(presence);
     }
 
     public static void shutdown() {
+        if (!running || !rpcSupported) return;
         running = false;
-        DiscordRPC.discordShutdown();
+        try {
+            DiscordRPC.discordShutdown();
+        } catch (Throwable ignored) {}
     }
 }

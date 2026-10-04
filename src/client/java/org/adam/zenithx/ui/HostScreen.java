@@ -1,6 +1,8 @@
 package org.adam.zenithx.ui;
 
+import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import org.adam.zenithx.FriendManager;
 import org.adam.zenithx.HostMain;
@@ -46,7 +48,6 @@ public class HostScreen extends HostBaseScreen {
                 btn -> this.minecraft.setScreen(new InviteScreen(this))
         ));
 
-        // زر Close
         this.addRenderableWidget(new MenuButton(
                 cx - 50, cy + 20, 100, 20,
                 Component.literal("Close"),

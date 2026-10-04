@@ -1,8 +1,14 @@
 package org.adam.zenithx.ui;
 
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//? } else {
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//? }
+//? if >=1.21.9 {
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+//? }
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import org.adam.zenithx.HostClient;
@@ -91,8 +97,13 @@ public class AddFriendScreen extends HostBaseScreen {
         ));
     }
 
+    //? if >=26 {
     @Override
     public void extractRenderState(GuiGraphicsExtractor gfx, int mx, int my, float a) {
+    //? } else {
+    /*@Override
+    public void render(GuiGraphics gfx, int mx, int my, float a) {*/
+    //? }
         int px = px(), py = py();
 
         gfx.fill(0, 0, width, height, 0x88000000);
@@ -103,18 +114,33 @@ public class AddFriendScreen extends HostBaseScreen {
         gfx.fill(px, py, px + DW, py + 24, C_TOPBAR);
         gfx.fill(px, py + 24, px + DW, py + 25, C_BORDER);
 
+        //? if >=26 {
         gfx.centeredText(font, Component.literal("Add Friend"),
                 px + DW / 2, py + 8, C_TEXT);
         gfx.centeredText(font, Component.literal("Enter a Minecraft username"),
                 px + DW / 2, py + 30, C_DIM);
+        //? } else {
+        /*gfx.drawCenteredString(font, Component.literal("Add Friend"),
+                px + DW / 2, py + 8, C_TEXT);
+        gfx.drawCenteredString(font, Component.literal("Enter a Minecraft username"),
+                px + DW / 2, py + 30, C_DIM);*/
+        //? }
 
         gfx.fill(px + 10, py + 42, px + DW - 10, py + 64, C_INPUT_BG);
         drawOutline(gfx, px + 10, py + 42, DW - 20, 22, invalid ? C_INPUT_ERR : C_INPUT_OK);
 
+        //? if >=26 {
         super.extractRenderState(gfx, mx, my, a);
+        //? } else {
+        /*super.render(gfx, mx, my, a);*/
+        //? }
     }
 
+    //? if >=26 {
     private void drawOutline(GuiGraphicsExtractor g, int x, int y, int w, int h, int c) {
+    //? } else {
+    /*private void drawOutline(GuiGraphics g, int x, int y, int w, int h, int c) {*/
+    //? }
         g.fill(x,         y,         x + w, y + 1,     c);
         g.fill(x,         y + h - 1, x + w, y + h,     c);
         g.fill(x,         y,         x + 1, y + h,     c);
@@ -168,6 +194,7 @@ public class AddFriendScreen extends HostBaseScreen {
         return true;
     }
 
+    //? if >=1.21.9 {
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
@@ -181,11 +208,32 @@ public class AddFriendScreen extends HostBaseScreen {
         }
         return super.keyPressed(event);
     }
+    //? } else {
+    /*@Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        if (key == KEY_ENTER || key == KEY_KP_ENTER) {
+            trySend();
+            return true;
+        }
+        if (key == KEY_ESCAPE) {
+            goBack();
+            return true;
+        }
+        return super.keyPressed(key, scanCode, modifiers);
+    }*/
+    //? }
 
+    //? if >=1.21.9 {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         return super.mouseClicked(event, doubleClick);
     }
+    //? } else {
+    /*@Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return super.mouseClicked(mouseX, mouseY, button);
+    }*/
+    //? }
 
     @Override
     public boolean isPauseScreen() { return false; }

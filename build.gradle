@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT'
+    id 'fabric-loom' version '1.17.17'
     id 'maven-publish'
 }
 
@@ -9,11 +9,15 @@ group = 'org.adam'
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.lenni0451.net/releases' }
+    maven { url 'https://maven.lenni0451.net/everything' }
+    flatDir {
+        dirs "${rootProject.projectDir}/libs"
+    }
 }
 
 loom {
     splitEnvironmentSourceSets()
-
     mods {
         "zenithx" {
             sourceSet sourceSets.main
@@ -22,16 +26,43 @@ loom {
     }
 }
 
-dependencies {
-    minecraft "com.mojang:minecraft:26.1.2"
-    implementation "net.fabricmc:fabric-loader:0.18.4"
-    implementation "net.fabricmc.fabric-api:fabric-api:0.148.2+26.1.2"
+def mcVersion = property('minecraft_version') as String
+def isUnobfuscated = mcVersion ==~ /^\d{2}\..*/
 
-    implementation files('libs/discord-rpc-1.6.2.jar')
+configurations {
+    authLib
+    clientImplementation.extendsFrom authLib
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${mcVersion}"
+
+    if (!isUnobfuscated) {
+        mappings loom.officialMojangMappings()
+    }
+
+    implementation "net.fabricmc:fabric-loader:${property('loader_version')}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${property('fabric_api_version')}"
+
+    authLib('net.raphimc:MinecraftAuth:4.1.1') {
+        exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'org.slf4j'
+    }
+
+    implementation 'libs:discord-rpc:1.6.2'
+    include 'libs:discord-rpc:1.6.2'
 
     include implementation('org.json:json:20231013')
     include implementation('org.java-websocket:Java-WebSocket:1.5.4')
-    include implementation('com.google.code.gson:gson:2.10.1')
+
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
+
+afterEvaluate {
+    configurations.authLib.resolvedConfiguration.resolvedArtifacts.each { art ->
+        def id = art.moduleVersion.id
+        dependencies.add('include', "${id.group}:${id.name}:${id.version}")
+    }
 }
 
 processResources {
@@ -43,26 +74,18 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
+    it.options.release = mcVersion.startsWith("1.20") ? 17 : (isUnobfuscated ? 25 : 21)
 }
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {
-    inputs.property "projectName", project.name
-    from("LICENSE") {
+    from("${rootProject.projectDir}/LICENSE") {
         rename { "${it}_${project.name}" }
     }
-    from {
-        fileTree('libs').filter { it.name.endsWith('.jar') }.collect { zipTree(it) }
-    }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    exclude 'com/sun/jna/**'
-    exclude 'com/sun/jna/platform/**'
 }
 
 publishing {

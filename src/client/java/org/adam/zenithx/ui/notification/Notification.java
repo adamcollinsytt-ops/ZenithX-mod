@@ -2,7 +2,11 @@ package org.adam.zenithx.ui.notification;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//? } else {
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//? }
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.util.Mth;
 import net.fabricmc.api.EnvType;
@@ -14,35 +18,32 @@ import java.util.function.Supplier;
 @Environment(EnvType.CLIENT)
 public class Notification implements GuiEventListener {
 
-    // ── Dimensions ───────────────────────────────────────────────────────────
     public static final int WIDTH       = 175;
     public static final int HEIGHT      = 50;
-    public static final int HEIGHT_BTN  = 64; // taller when action button shown
+    public static final int HEIGHT_BTN  = 64;
     private static final int TIMER_H    = 3;
     private static final int CLOSE_SIZE = 11;
 
-    // ── Colors (ARGB) ────────────────────────────────────────────────────────
-    private static final int C_BG           = 0xFF1E1E2E;
-    private static final int C_BORDER       = 0xFF3A3A5C;
-    private static final int C_BORDER_HOVER = 0xFF5A5A9C;
-    private static final int C_TIMER        = 0xFF5865F2;
-    private static final int C_TIMER_HOVER  = 0xFF7289DA;
-    private static final int C_TITLE        = 0xFFFFFFFF;
-    private static final int C_TEXT         = 0xFFAAAAAA;
-    private static final int C_CLOSE        = 0xFFFF5555;
+    // --- ثوابت الألوان الجديدة (Dark / Black Theme) ---
+    private static final int C_BG           = 0xFF121212; // خلفية سوداء داكنة
+    private static final int C_BORDER       = 0xFF2A2A2A; // حد أسود رمادي
+    private static final int C_BORDER_HOVER = 0xFF444444; // حد أسود أفتح عند مرور الماوس
+    private static final int C_TIMER        = 0xFF333333; // شريط الوقت باللون الأسود الداكن
+    private static final int C_TIMER_HOVER  = 0xFF555555; // شريط الوقت عند التمرير
+    private static final int C_TITLE        = 0xFFFFFFFF; // عنوان أبيض
+    private static final int C_TEXT         = 0xFFAAAAAA; // نص رمادي فاتح
+    private static final int C_CLOSE        = 0xFFFF5555; // زر الإغلاق
     private static final int C_CLOSE_X      = 0xFFFFFFFF;
-    private static final int C_BTN          = 0xFF5865F2;
-    private static final int C_BTN_HOVER    = 0xFF7289DA;
-    private static final int C_BTN_TEXT     = 0xFFFFFFFF;
+    private static final int C_BTN          = 0xFF252525; // زر التفاعل أسود
+    private static final int C_BTN_HOVER    = 0xFF3A3A3A; // زر التفاعل عند التمرير
+    private static final int C_BTN_TEXT     = 0xFFFFFFFF; // نص الزر أبيض
 
-    // ── Data ─────────────────────────────────────────────────────────────────
-    public final String  title;
-    public final String  text;
-    public final float   duration;
-    public final boolean persistent;
-    public final Object  uniqueId;
+    public final String   title;
+    public final String   text;
+    public final float    duration;
+    public final boolean  persistent;
+    public final Object   uniqueId;
 
-    // Optional action button (e.g. "UPDATE")
     private final String   actionLabel;
     private final Runnable actionCallback;
 
@@ -50,7 +51,6 @@ public class Notification implements GuiEventListener {
     private final Runnable          onClosed;
     private final Supplier<Boolean> timerEnabled;
 
-    // ── Animation ────────────────────────────────────────────────────────────
     private float   currentX;
     private float   currentHeight;
     private final int targetHeight;
@@ -62,7 +62,6 @@ public class Notification implements GuiEventListener {
     private float   timerProgress  = 0f;
     private boolean timerStarted   = false;
 
-    // ── Drag ─────────────────────────────────────────────────────────────────
     private boolean dragging         = false;
     private float   dragStartX       = 0f;
     private float   dragOffsetPx     = 0f;
@@ -70,7 +69,6 @@ public class Notification implements GuiEventListener {
     private boolean didTriggerAction = false;
     private boolean clicked          = false;
 
-    // ── Misc ─────────────────────────────────────────────────────────────────
     private boolean hovered    = false;
     private boolean btnHovered = false;
     private boolean focused    = false;
@@ -78,13 +76,9 @@ public class Notification implements GuiEventListener {
 
     public int screenY = 0;
 
-    // Close/action button hit areas
     private int closeBtnX, closeBtnY;
     private int actionBtnX, actionBtnY, actionBtnW, actionBtnH;
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Constructor (original — no action button)
-    // ────────────────────────────────────────────────────────────────────────
     public Notification(
             String title,
             String text,
@@ -102,11 +96,6 @@ public class Notification implements GuiEventListener {
                 null, null);
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    // Constructor with optional action button
-    // actionLabel    — button text, e.g. "UPDATE"  (null = no button)
-    // actionCallback — what happens when button is clicked
-    // ────────────────────────────────────────────────────────────────────────
     public Notification(
             String title,
             String text,
@@ -142,9 +131,6 @@ public class Notification implements GuiEventListener {
             dismissInstantlyFuture.thenRun(this::dismissInstantly);
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Tick
-    // ────────────────────────────────────────────────────────────────────────
     public void tick(float deltaSeconds, int screenWidth) {
         if (dismissed) return;
 
@@ -194,10 +180,11 @@ public class Notification implements GuiEventListener {
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Render
-    // ────────────────────────────────────────────────────────────────────────
+    //? if >=26 {
     public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    //? } else {
+    /*public void render(GuiGraphics graphics, int mouseX, int mouseY) {*/
+    //? }
         if (dismissed) return;
 
         int x = (int) currentX;
@@ -213,24 +200,34 @@ public class Notification implements GuiEventListener {
         Font font = Minecraft.getInstance().font;
 
         int borderColor = (hovered && !clicked) ? C_BORDER_HOVER : C_BORDER;
+        //? if >=26 {
         graphics.outline(x - 1, y - 1, w + 2, h + 2, borderColor);
+        //? } else {
+        /*graphics.fill(x - 1,     y - 1,     x + w + 1, y,         borderColor);
+        graphics.fill(x - 1,     y + h,     x + w + 1, y + h + 1, borderColor);
+        graphics.fill(x - 1,     y - 1,     x,         y + h + 1, borderColor);
+        graphics.fill(x + w,     y - 1,     x + w + 1, y + h + 1, borderColor);*/
+        //? }
         graphics.fill(x, y, x + w, y + h, C_BG);
 
         if (h > 10) {
             String displayTitle = trimWithEllipsis(title, w - 14, font);
             String displayText  = trimWithEllipsis(text,  w - 14, font);
+            //? if >=26 {
             graphics.text(font, displayTitle, x + 7, y + 7,  C_TITLE, true);
             graphics.text(font, displayText,  x + 7, y + 18, C_TEXT,  false);
+            //? } else {
+            /*graphics.drawString(font, displayTitle, x + 7, y + 7,  C_TITLE, true);
+            graphics.drawString(font, displayText,  x + 7, y + 18, C_TEXT,  false);*/
+            //? }
         }
 
-        // ── Action button ────────────────────────────────────────────────
         if (actionLabel != null && h > 40) {
             int btnW = font.width(actionLabel) + 14;
             int btnH = 12;
             int btnX = x + w - btnW - 6;
             int btnY = y + h - btnH - 6;
 
-            // collapse-safe: store for hit testing
             actionBtnX = btnX;
             actionBtnY = btnY;
             actionBtnW = btnW;
@@ -241,37 +238,39 @@ public class Notification implements GuiEventListener {
 
             int btnColor = btnHovered ? C_BTN_HOVER : C_BTN;
             graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, btnColor);
+            //? if >=26 {
             graphics.text(font, actionLabel, btnX + 7, btnY + 2, C_BTN_TEXT, false);
+            //? } else {
+            /*graphics.drawString(font, actionLabel, btnX + 7, btnY + 2, C_BTN_TEXT, false);*/
+            //? }
         }
 
-        // ── Timer bar ────────────────────────────────────────────────────
         if (!persistent && timerStarted && h >= TIMER_H) {
             int timerColor = hovered ? C_TIMER_HOVER : C_TIMER;
             int timerW = (int) (w * timerProgress);
             int timerY = y + h - TIMER_H;
-            if (actionLabel != null) timerY = y + h - TIMER_H; // same spot, below button
+            if (actionLabel != null) timerY = y + h - TIMER_H;
             if (timerW > 0) {
                 graphics.fill(x, timerY, x + timerW, timerY + TIMER_H, timerColor);
             }
         }
 
-        // ── Close button (persistent only, no action button) ─────────────
         if (persistent && actionLabel == null && h > 16) {
             closeBtnX = x + w - CLOSE_SIZE - 5;
             closeBtnY = y + 5;
             graphics.fill(closeBtnX, closeBtnY,
                     closeBtnX + CLOSE_SIZE, closeBtnY + CLOSE_SIZE, C_CLOSE);
+            //? if >=26 {
             graphics.text(font, "x", closeBtnX + 3, closeBtnY + 2, C_CLOSE_X, false);
+            //? } else {
+            /*graphics.drawString(font, "x", closeBtnX + 3, closeBtnY + 2, C_CLOSE_X, false);*/
+            //? }
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Mouse input
-    // ────────────────────────────────────────────────────────────────────────
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (dismissed || button != 0) return false;
 
-        // Action button click
         if (actionLabel != null
                 && mouseX >= actionBtnX && mouseX <= actionBtnX + actionBtnW
                 && mouseY >= actionBtnY && mouseY <= actionBtnY + actionBtnH) {
@@ -280,7 +279,6 @@ public class Notification implements GuiEventListener {
             return true;
         }
 
-        // Close button (persistent, no action button)
         if (persistent && actionLabel == null && isInsideCloseBtn((int) mouseX, (int) mouseY)) {
             animateOut();
             return true;
@@ -332,9 +330,6 @@ public class Notification implements GuiEventListener {
     @Override public boolean isFocused()           { return focused; }
     @Override public void    setFocused(boolean f) { this.focused = f; }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Animation
-    // ────────────────────────────────────────────────────────────────────────
     public void animateIn() { animatingIn = true; }
 
     private void animateOut() {
@@ -353,9 +348,6 @@ public class Notification implements GuiEventListener {
         onClosed.run();
     }
 
-    // ────────────────────────────────────────────────────────────────────────
-    //  Helpers
-    // ────────────────────────────────────────────────────────────────────────
     public boolean isDismissed()       { return dismissed; }
     public int     getRenderedHeight() { return (int) currentHeight; }
 

@@ -1,7 +1,11 @@
 package org.adam.zenithx.ui.notification;
 
 import net.minecraft.client.Minecraft;
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+//? } else {
+/*import net.minecraft.client.gui.GuiGraphics;*/
+//? }
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,7 +46,11 @@ public final class NotificationManager {
         }
     }
 
+    //? if >=26 {
     public static void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+    //? } else {
+    /*public static void render(GuiGraphics graphics, int mouseX, int mouseY) {*/
+    //? }
         Minecraft mc = Minecraft.getInstance();
         int screenHeight = mc.getWindow().getGuiScaledHeight();
 

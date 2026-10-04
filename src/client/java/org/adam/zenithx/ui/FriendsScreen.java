@@ -1,15 +1,25 @@
 package org.adam.zenithx.ui;
 
+//? if >=26 {
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+//? } else {
+/*import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;*/
+//? }
+//? if >=1.21.9 {
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+//? }
 import org.adam.zenithx.ui.notification.Notification;
 import org.adam.zenithx.ui.notification.NotificationManager;
 import org.adam.zenithx.ui.components.MenuButton;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.adam.zenithx.FriendManager;
 import org.adam.zenithx.HostClient;
@@ -83,7 +93,7 @@ public class FriendsScreen extends HostBaseScreen {
     private List<String> requests = new ArrayList<>();
     private List<String> invites  = new ArrayList<>();
 
-    private final HostBaseScreen parent;
+    private final Screen parent;
     private final LevelSummary   worldToHost;
 
     private void startHosting() {
@@ -95,13 +105,13 @@ public class FriendsScreen extends HostBaseScreen {
         }
     }
 
-    public FriendsScreen(HostBaseScreen parent) {
+    public FriendsScreen(Screen parent) {
         super(Component.literal("Invite Friends"));
-        this.parent      = parent;
+        this.parent = parent;
         this.worldToHost = null;
     }
 
-    public FriendsScreen(HostBaseScreen parent, LevelSummary world) {
+    public FriendsScreen(Screen parent, LevelSummary world) {
         super(Component.literal("Invite Friends"));
         this.parent      = parent;
         this.worldToHost = world;
@@ -109,6 +119,39 @@ public class FriendsScreen extends HostBaseScreen {
 
     private int px() { return (width  - PW) / 2; }
     private int py() { return (height - PH) / 2; }
+
+    // --- version-compatibility drawing helpers ---------------------------
+
+    //? if >=26 {
+    private void cText(GuiGraphicsExtractor g, Component text, int x, int y, int color) {
+        g.centeredText(font, text, x, y, color);
+    }
+    private void dText(GuiGraphicsExtractor g, Component text, int x, int y, int color) {
+        g.text(font, text, x, y, color, false);
+    }
+    private void outline(GuiGraphicsExtractor g, int x, int y, int w, int h, int c) {
+        g.outline(x, y, w, h, c);
+    }
+    private void blitAvatar(GuiGraphicsExtractor g, Identifier skin, int x, int y, float u, float v, int w, int h) {
+        g.blit(RenderPipelines.GUI_TEXTURED, skin, x, y, u, v, w, h, 8, 8, 64, 64);
+    }
+    //? } else {
+    /*private void cText(GuiGraphics g, Component text, int x, int y, int color) {
+        g.drawCenteredString(font, text, x, y, color);
+    }
+    private void dText(GuiGraphics g, Component text, int x, int y, int color) {
+        g.drawString(font, text, x, y, color, false);
+    }
+    private void outline(GuiGraphics g, int x, int y, int w, int h, int c) {
+        g.fill(x,         y,         x + w, y + 1, c);
+        g.fill(x,         y + h - 1, x + w, y + h, c);
+        g.fill(x,         y,         x + 1, y + h, c);
+        g.fill(x + w - 1, y,         x + w, y + h, c);
+    }
+    private void blitAvatar(GuiGraphics g, ResourceLocation skin, int x, int y, float u, float v, int w, int h) {
+        g.blit(skin, x, y, u, v, w, h, 8, 8, 64, 64);
+    }*/
+    //? }
 
     @Override
     protected void init() {
@@ -220,21 +263,26 @@ public class FriendsScreen extends HostBaseScreen {
         refresh();
     }
 
+    //? if >=26 {
     @Override
     public void extractRenderState(GuiGraphicsExtractor gfx, int mx, int my, float a) {
+    //? } else {
+    /*@Override
+    public void render(GuiGraphics gfx, int mx, int my, float a) {*/
+    //? }
         int px = px(), py = py();
 
         gfx.fill(px + 4, py + 4, px + PW + 4, py + PH + 4, 0x55000000);
         gfx.fill(px, py, px + PW, py + PH, C_BG);
-        gfx.outline(px, py, PW, PH, C_BORDER);
+        outline(gfx, px, py, PW, PH, C_BORDER);
 
         gfx.fill(px, py, px + PW, py + 26, C_TOPBAR);
         hline(gfx, px, py + 26, PW, C_BORDER);
-        gfx.centeredText(font, Component.literal("Invite Friends"),
+        cText(gfx, Component.literal("Invite Friends"),
                 px + PW / 2, py + 9, C_TEXT);
 
         gfx.fill(px + 8, py + 27, px + PW - 8, py + 49, C_SRCHBG);
-        gfx.outline(px + 8, py + 27, PW - 16, 22, C_SECT);
+        outline(gfx, px + 8, py + 27, PW - 16, 22, C_SECT);
         drawSearchIcon(gfx, px + 10, py + 30);
 
         drawTabs(gfx, px, py);
@@ -252,15 +300,23 @@ public class FriendsScreen extends HostBaseScreen {
         hline(gfx, px, py + PH - 24, PW, C_BORDER);
         gfx.fill(px + 1, py + PH - 23, px + PW - 1, py + PH - 1, 0xFF1A1E2E);
 
+        //? if >=26 {
         super.extractRenderState(gfx, mx, my, a);
+        //? } else {
+        /*super.render(gfx, mx, my, a);*/
+        //? }
     }
 
+    //? if >=26 {
     private void drawTabs(GuiGraphicsExtractor gfx, int px, int py) {
+    //? } else {
+    /*private void drawTabs(GuiGraphics gfx, int px, int py) {*/
+    //? }
         int tabW = (PW - 6) / 3;
         int ty   = py + 52;
 
         gfx.fill(px + 2, ty, px + PW - 2, ty + 18, 0xFF1C1C1C);
-        gfx.outline(px + 2, ty, PW - 4, 18, C_BORDER);
+        outline(gfx, px + 2, ty, PW - 4, 18, C_BORDER);
 
         gfx.fill(px + 2 + tabW,     ty + 2, px + 3 + tabW,     ty + 16, C_BORDER);
         gfx.fill(px + 4 + tabW * 2, ty + 2, px + 5 + tabW * 2, ty + 16, C_BORDER);
@@ -274,7 +330,11 @@ public class FriendsScreen extends HostBaseScreen {
         hline(gfx, atx, ty + 17, tabW, C_TABLINE);
     }
 
+    //? if >=26 {
     private void drawRows(GuiGraphicsExtractor gfx,
+    //? } else {
+    /*private void drawRows(GuiGraphics gfx,*/
+    //? }
                           int px, int listTop, int listBot, int mx, int my) {
         gfx.enableScissor(px + 1, listTop, px + PW - 1, listBot);
 
@@ -290,7 +350,7 @@ public class FriendsScreen extends HostBaseScreen {
                 int lx = px + PW / 2 - lw / 2;
                 hline(gfx, px + 6,      y + RH / 2, lx - px - 10,          C_SECT);
                 hline(gfx, lx + lw + 4, y + RH / 2, px + PW - lx - lw - 9, C_SECT);
-                gfx.centeredText(font, Component.literal(row.name),
+                cText(gfx, Component.literal(row.name),
                         px + PW / 2, y + (RH - 7) / 2, C_DIM);
                 y += RH;
                 continue;
@@ -305,7 +365,7 @@ public class FriendsScreen extends HostBaseScreen {
             drawAvatar(gfx, avX, avY, row.name);
 
             String extra = FriendManager.getInstance().getLastSeenText(row.name);
-            gfx.text(font, Component.literal(row.name + " " + extra),
+            dText(gfx, Component.literal(row.name + " " + extra),
                     px + 26, y + (RH - 7) / 2, C_TEXT);
 
             if (row.type == Row.T.FRIEND) {
@@ -329,7 +389,11 @@ public class FriendsScreen extends HostBaseScreen {
         gfx.disableScissor();
     }
 
+    //? if >=26 {
     private void drawMenuBtn(GuiGraphicsExtractor gfx,
+    //? } else {
+    /*private void drawMenuBtn(GuiGraphics gfx,*/
+    //? }
                              int x, int y, int w, int h,
                              MenuButton.Style normal, MenuButton.Style hover,
                              String label, int mx, int my) {
@@ -344,27 +408,37 @@ public class FriendsScreen extends HostBaseScreen {
         gfx.fill(x - 1,  y + h, x + w + 1, y + h + 1,  s.outlineColor());
         gfx.fill(x - 1,  y,     x,         y + h,       s.outlineColor());
         gfx.fill(x + w,  y,     x + w + 1, y + h,       s.outlineColor());
-        gfx.centeredText(font, Component.literal(label),
+        cText(gfx, Component.literal(label),
                 x + w / 2, y + (h - 7) / 2, s.textColor());
     }
 
+    //? if >=26 {
     private void drawAvatar(GuiGraphicsExtractor gfx, int avX, int avY, String name) {
         Identifier skin = SkinCache.get(name);
+    //? } else {
+    /*private void drawAvatar(GuiGraphics gfx, int avX, int avY, String name) {
+        ResourceLocation skin = SkinCache.get(name);*/
+    //? }
         if (skin != null) {
-            gfx.blit(RenderPipelines.GUI_TEXTURED, skin, avX, avY, 0f, 0f, AV, AV, AV, AV);
-            gfx.outline(avX, avY, AV, AV, 0x66000000);
+            blitAvatar(gfx, skin, avX, avY, 8.0F, 8.0F, AV, AV);
+            blitAvatar(gfx, skin, avX, avY, 40.0F, 8.0F, AV, AV);
+            outline(gfx, avX, avY, AV, AV, 0x66000000);
         } else {
             gfx.fill(avX, avY, avX + AV, avY + AV, colorFor(name));
-            gfx.outline(avX, avY, AV, AV, 0xFF404040);
+            outline(gfx, avX, avY, AV, AV, 0xFF404040);
             gfx.fill(avX + 3, avY + 4, avX + 5,  avY + 6,  0x99000000);
             gfx.fill(avX + 7, avY + 4, avX + 9,  avY + 6,  0x99000000);
             gfx.fill(avX + 3, avY + 9, avX + 10, avY + 10, 0x99000000);
             String c = name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase();
-            gfx.centeredText(font, Component.literal(c), avX + AV / 2, avY + 4, 0xCCFFFFFF);
+            cText(gfx, Component.literal(c), avX + AV / 2, avY + 4, 0xCCFFFFFF);
         }
     }
 
+    //? if >=26 {
     private void drawOnlineDot(GuiGraphicsExtractor gfx, int x, int y, boolean online) {
+    //? } else {
+    /*private void drawOnlineDot(GuiGraphics gfx, int x, int y, boolean online) {*/
+    //? }
         int c = online ? C_ONLINE : C_OFFLINE;
         gfx.fill(x + 1, y,     x + 6, y + 1, c);
         gfx.fill(x,     y + 1, x + 7, y + 6, c);
@@ -372,19 +446,31 @@ public class FriendsScreen extends HostBaseScreen {
         if (online) gfx.fill(x + 1, y + 1, x + 3, y + 3, 0xFF88DD88);
     }
 
+    //? if >=26 {
     private void hline(GuiGraphicsExtractor g, int x, int y, int w, int c) {
+    //? } else {
+    /*private void hline(GuiGraphics g, int x, int y, int w, int c) {*/
+    //? }
         if (w > 0) g.fill(x, y, x + w, y + 1, c);
     }
 
+    //? if >=26 {
     private void drawBadge(GuiGraphicsExtractor g, int x, int y, int n) {
+    //? } else {
+    /*private void drawBadge(GuiGraphics g, int x, int y, int n) {*/
+    //? }
         n = Math.min(n, 99);
         int w = n >= 10 ? 18 : 13;
         g.fill(x, y, x + w, y + 10, C_BADGE);
-        g.outline(x, y, w, 10, 0xFF991010);
-        g.centeredText(font, Component.literal(String.valueOf(n)), x + w / 2, y + 1, C_WHITE);
+        outline(g, x, y, w, 10, 0xFF991010);
+        cText(g, Component.literal(String.valueOf(n)), x + w / 2, y + 1, C_WHITE);
     }
 
+    //? if >=26 {
     private void drawScrollbar(GuiGraphicsExtractor g, int x, int top, int bot) {
+    //? } else {
+    /*private void drawScrollbar(GuiGraphics g, int x, int top, int bot) {*/
+    //? }
         int h     = bot - top;
         int total = buildRows().size() * RH;
         g.fill(x, top, x + 3, bot, C_SCRBAR);
@@ -394,7 +480,11 @@ public class FriendsScreen extends HostBaseScreen {
         g.fill(x, ty, x + 3, ty + th, C_SCRTHUMB);
     }
 
+    //? if >=26 {
     private void drawSearchIcon(GuiGraphicsExtractor g, int x, int y) {
+    //? } else {
+    /*private void drawSearchIcon(GuiGraphics g, int x, int y) {*/
+    //? }
         int ic = 0xFF888888;
         g.fill(x + 2, y,     x + 6, y + 1, ic);
         g.fill(x + 2, y + 6, x + 6, y + 7, ic);
@@ -410,11 +500,24 @@ public class FriendsScreen extends HostBaseScreen {
         g.fill(x + 1, y + 2, x + 2, y + 6, 0xFF555555);
     }
 
+    //? if >=1.21.9 {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() != 0) return super.mouseClicked(event, doubleClick);
-
         double mx = event.x(), my = event.y();
+        return handleClick(mx, my, () -> super.mouseClicked(event, doubleClick));
+    }
+    //? } else {
+    /*@Override
+    public boolean mouseClicked(double mx, double my, int button) {
+        if (button != 0) return super.mouseClicked(mx, my, button);
+        return handleClick(mx, my, () -> super.mouseClicked(mx, my, button));
+    }*/
+    //? }
+
+    private interface FallbackClick { boolean run(); }
+
+    private boolean handleClick(double mx, double my, FallbackClick fallback) {
         int px = px(), py = py();
         int listTop = py + 72, listBot = py + PH - 24;
 
@@ -479,19 +582,36 @@ public class FriendsScreen extends HostBaseScreen {
             y += RH;
         }
 
-        return super.mouseClicked(event, doubleClick);
+        return fallback.run();
     }
 
+    //? if >=1.21.9 {
     @Override
     public boolean keyPressed(KeyEvent event) {
         return super.keyPressed(event);
     }
+    //? } else {
+    /*@Override
+    public boolean keyPressed(int key, int scanCode, int modifiers) {
+        return super.keyPressed(key, scanCode, modifiers);
+    }*/
+    //? }
 
+    //? if >=1.20.5 {
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
+    //? } else {
+    /*@Override
+    public boolean mouseScrolled(double mx, double my, double sy) {
+        double sx = 0;*/
+    //? }
         int listTop = py() + 72, listBot = py() + PH - 24;
         if (mx < px() || mx > px() + PW || my < listTop || my > listBot)
+            //? if >=1.20.5 {
             return super.mouseScrolled(mx, my, sx, sy);
+            //? } else {
+            /*return super.mouseScrolled(mx, my, sy);*/
+            //? }
         int totalH = buildRows().size() * RH;
         int viewH  = listBot - listTop;
         scrollY = (int) Math.max(0, Math.min(scrollY - sy * RH, Math.max(0, totalH - viewH)));
